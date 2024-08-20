@@ -1,3 +1,40 @@
-<heml>
-  <p>hellow world</p>
-</heml>
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ランダム画像表示</title>
+    <style>
+        #image-container img {
+            width: 274px;
+            height: 383px;
+            margin: 10px;
+        }
+        header,main {
+            text-align: center;
+            margin: 0 auto;
+            width: 80%;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h2>TRETERA ランダムデッキメーカー</h2>
+    </header>
+    <main>
+        <div>
+            <label for="preselected-cards">選択されたカード (カンマ区切り):</label>
+            <input type="text" id="preselected-cards" placeholder="例: 1,5,7">
+            <!-- 発売時期選択UIの追加 -->
+            <div id="release-period-container">
+                <!-- JavaScriptで選択肢を動的に挿入 -->
+            </div>
+        </div>
+        <button id="change-images-button">デッキ作成</button>
+        <div id="image-container"></div>
+    </main>
+    
+    <script src="loadCards.js" type="module"></script>
+    <script src="main.js" type="module"></script>
+</body>
+</html>
