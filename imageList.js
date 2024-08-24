@@ -1,8 +1,8 @@
 // imageList.js
 
-export function getRandomImageUrls(count, maxDuplicates = 2, preselected = [], filteredCardIds = []) {
+export async function getRandomImageUrls(count, maxDuplicates = 2, preselected = [], filteredCardIds = []) {
   const basePath = './data/img/card_list/'; // 画像が保存されているパス
-  const totalImages = filteredCardIds.length;// 画像の総数を計算
+  const totalImages = filteredCardIds.length; // 画像の総数を計算
 
   // maxDuplicates 許可される最大の重複回数
 
@@ -15,7 +15,7 @@ export function getRandomImageUrls(count, maxDuplicates = 2, preselected = [], f
   const imageCounts = {}; // 画像ごとのカウントを追跡するオブジェクト
 
   // 事前選択されたカードのカウントを初期化
-  preselected.forEach(num => {
+  for (const num of preselected) {
     const imageUrl = `${basePath}${num}.png`;
     if (!imageCounts[imageUrl]) {
       imageCounts[imageUrl] = 0;
@@ -26,19 +26,38 @@ export function getRandomImageUrls(count, maxDuplicates = 2, preselected = [], f
       randomImageUrls.push(imageUrl);
       imageCounts[imageUrl]++;
     }
-  });
+  }
+
+  // 対応する画像形式の配列
+  const supportedFormats = ['png', 'jpg', 'jpeg', 'gif', 'webp'];
 
   // ランダムな画像URLを生成
   while (randomImageUrls.length < count) {
     const randomIndex = Math.floor(Math.random() * filteredCardIds.length);
-    const imageUrl = `${basePath}${filteredCardIds[randomIndex]}.png`;
+    let imageUrl = null;
 
-      // 画像が存在しない場合にエラー表示を回避する
+    // 画像形式ごとに存在確認を行う
+    for (const format of supportedFormats) {
+      const possibleImageUrl = `${basePath}${filteredCardIds[randomIndex]}.${format}`;
+
+      // 画像の存在確認 (非同期処理を同期的に待つ)
+      if (await imageExists(possibleImageUrl)) {
+        imageUrl = possibleImageUrl;
+        break;
+      }
+    }
+
+    // 画像が見つからない場合は次のループへ
+    if (!imageUrl) {
+      continue;
+    }
+
+    // 画像が存在しない場合にエラー表示を回避する
     if (!imageCounts[imageUrl]) {
       imageCounts[imageUrl] = 0;
     }
 
-      // 画像の重複が許可される最大回数を超えていないかチェック
+    // 画像の重複が許可される最大回数を超えていないかチェック
     if (imageCounts[imageUrl] < maxDuplicates) {
       randomImageUrls.push(imageUrl);
       imageCounts[imageUrl]++;
@@ -46,3 +65,14 @@ export function getRandomImageUrls(count, maxDuplicates = 2, preselected = [], f
   }
   return randomImageUrls;
 }
+
+// imageExists関数をPromiseを返すように変更
+function imageExists(url,) {
+  return new Promise((resolve) => {
+    const img = new Image();
+    img.onload = () => resolve(true);
+    img.onerror = () => resolve(false);
+    img.src = url;
+  });
+}
+
