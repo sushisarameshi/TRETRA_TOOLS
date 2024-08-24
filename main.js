@@ -2,7 +2,7 @@
 
 // 40種類の画像URLを配列に格納
 import { loadCards, filterCardsByReleasePeriod } from './loadCards.js';
-import { getRandomImageUrls } from './imageList.js';
+import { getRandomImageUrls, imageExists } from './imageList.js';
 
 // フィルタリングされたカードからランダム画像を取得する関数
 async function getRandomImages(filteredCards) {
@@ -21,7 +21,6 @@ async function getRandomImages(filteredCards) {
 
 // 画像を表示する
 async function displayImages() {
-    // フィルタリングされたカードがグローバル変数として利用できる前提で修正
     const filteredCards = window.filteredCards || [];
     const images = await getRandomImages(filteredCards);
     
@@ -29,27 +28,26 @@ async function displayImages() {
     container.innerHTML = '';
 
     if (filteredCards.length === 0) {
-        // デフォルトのチェックボックスで選択された場合に画像を表示
         const defaultFilteredCards = filterCardsByReleasePeriod(window.allCards);
         const defaultImages = await getRandomImages(defaultFilteredCards);
 
         if (defaultImages.length > 0) {
-            defaultImages.forEach(url => {
+            for (const url of defaultImages) {
                 const img = document.createElement("img");
-                img.src = url;
-                img.onerror = () => img.src = './data/img/card_list/0.png'; // 代替画像を設定
+                const exists = await imageExists(url);
+                img.src = exists ? url : './data/img/card_list/0.png'; // 見つからない場合は代替画像を使用
                 container.appendChild(img);
-            });
+            }
         } else {
             alert('デフォルトで選択されたチェックボックスでも画像がありません。');
         }
     } else {
-        images.forEach(url => {
+        for (const url of images) {
             const img = document.createElement("img");
-            img.src = url;
-            img.onerror = () => img.src = './data/img/card_list/0.png'; // 代替画像を設定
+            const exists = await imageExists(url);
+            img.src = exists ? url : './data/img/card_list/0.png'; // 見つからない場合は代替画像を使用
             container.appendChild(img);
-        });
+        }
     }
 }
 

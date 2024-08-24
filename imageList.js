@@ -66,13 +66,11 @@ export async function getRandomImageUrls(count, maxDuplicates = 2, preselected =
   return randomImageUrls;
 }
 
-// imageExists関数をPromiseを返すように変更
-function imageExists(url,) {
-  return new Promise((resolve) => {
-    const img = new Image();
-    img.onload = () => resolve(true);
-    img.onerror = () => resolve(false);
-    img.src = url;
-  });
+export async function imageExists(url) {
+  try {
+      const response = await fetch(url, { method: 'HEAD' });
+      return response.ok; // ステータスが200-299であればtrueを返す
+  } catch (error) {
+      return false; // ネットワークエラーなどが発生した場合はfalseを返す
+  }
 }
-
