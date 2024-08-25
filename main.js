@@ -144,7 +144,7 @@ function populateCardSelect(cards) {
 }
 
 // 検索ボックスの入力に基づいてプルダウンをフィルタリングする関数
-document.getElementById('card-search').addEventListener('input', function() {
+document.getElementById('card-search').addEventListener('keyup', function() {
     const query = this.value.toLowerCase();
     const filteredCards = window.allCards.filter(card => card.name.toLowerCase().includes(query));
     populateCardSelect(filteredCards); // フィルタリングされたカードでプルダウンを更新
