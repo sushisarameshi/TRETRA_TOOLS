@@ -33,9 +33,10 @@ async function getRandomImages(filteredCards) {
                 console.error(`URL does not match any supported pattern: ${url}`);
                 return { url, card: null };
             }
-            const card = filteredCards.find(card => parseInt(card.id, 10) === cardId);
+            // すべてのカード（window.allCards）からカード情報を取得
+            const card = window.allCards.find(card => parseInt(card.id, 10) === cardId);
             if (!card) {
-                console.error(`Card with ID ${cardId} not found in filteredCards.`);
+                console.error(`Card with ID ${cardId} not found in allCards.`);
             }
             return { url, card };
         });
