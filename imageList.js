@@ -13,10 +13,22 @@ export async function getRandomImageUrls(count, maxDuplicates = 2, preselected =
 
   const randomImageUrls = []; // 最初に選択されたカードを追加
   const imageCounts = {}; // 画像ごとのカウントを追跡するオブジェクト
-
+  // 対応する画像形式の配列
+  const supportedFormats = ['png', 'jpg', 'jpeg', 'gif', 'webp'];
+  let p_select_idx = 0;
   // 事前選択されたカードのカウントを初期化
   for (const num of preselected) {
-    const imageUrl = `${basePath}${num}.png`;
+    
+    let imageUrl = `${basePath}${num}.png`;
+    // 画像形式を検索
+    for (const format of supportedFormats) {
+      const possibleImageUrl = `${basePath}${preselected[p_select_idx]}.${format}`;
+      // 画像の存在確認 (非同期処理を同期的に待つ)
+      if (await imageExists(possibleImageUrl)) {
+        imageUrl = possibleImageUrl;
+        break;
+      }
+    }
     if (!imageCounts[imageUrl]) {
       imageCounts[imageUrl] = 0;
     }
@@ -26,10 +38,10 @@ export async function getRandomImageUrls(count, maxDuplicates = 2, preselected =
       randomImageUrls.push(imageUrl);
       imageCounts[imageUrl]++;
     }
+    p_select_idx++;
   }
 
-  // 対応する画像形式の配列
-  const supportedFormats = ['png', 'jpg', 'jpeg', 'gif', 'webp'];
+
 
   // ランダムな画像URLを生成
   while (randomImageUrls.length < count) {
