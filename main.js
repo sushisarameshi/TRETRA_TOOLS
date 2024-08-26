@@ -139,7 +139,12 @@ function populateCardSelect(cards) {
     cards.forEach(card => {
         const option = document.createElement('option');
         option.value = card.id;
-        option.textContent = card.id + '. ' + card.name + ' [第' + card.rel + '弾]';
+        if (parseFloat(card.rel)){
+            option.textContent = card.id + '. ' + card.name + ' [第' + card.rel + '弾]';
+        }else{
+            option.textContent = card.id + '. ' + card.name + ' [' + card.rel + ']';
+        }
+        
         select.appendChild(option); // メモ：appendChildでhtmlに新しい要素を追加できる
     });
 }
