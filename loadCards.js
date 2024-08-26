@@ -51,7 +51,11 @@ function populateReleasePeriodOptions(cards) {
 
         const label = document.createElement('label');
         label.htmlFor = checkbox.id;
-        label.textContent = period;
+        if (parseFloat(period)){
+            label.textContent = ' 第' + period + '弾';
+        }else{
+            label.textContent = ' ' + period;
+        }
         releasePeriodContainer.appendChild(checkbox);
         releasePeriodContainer.appendChild(label);
         releasePeriodContainer.appendChild(document.createElement('br'));
