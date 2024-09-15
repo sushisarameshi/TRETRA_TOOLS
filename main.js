@@ -19,6 +19,13 @@ async function getRandomImages(filteredCards) {
         const filteredCardIds = filteredCards.map(card => parseInt(card.id, deck_size));
         const imageUrls = await getRandomImageUrls(deck_size, 2, preselectedCards, filteredCardIds);
 
+        // カード番号で昇順にソート
+        imageUrls.sort((a, b) => {
+            const idA = parseInt(a.match(/(\d+)\./)[1], 10);
+            const idB = parseInt(b.match(/(\d+)\./)[1], 10);
+            return idA - idB;
+        });
+
         // 画像URLとカードIDをマッピングする
         return imageUrls.map(url => {
             let cardId = null;

@@ -1,0 +1,102 @@
+
+body,html {
+    margin: 0px;
+    padding: 0px;
+}
+
+#image-container img {
+    width: 274px;
+    height: 383px;
+    margin: 10px;
+}
+#image-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); /* カードを自動でフィットさせる */
+    gap: 10px; /* カード間のスペース */
+    max-width: 1600px; /* 最大幅を設定して横幅を制限 */
+    margin: 0 auto; /* コンテナを中央に配置 */
+}
+header,main {
+    text-align: center;
+    margin: 0 auto;
+    width: 95%;
+}
+.card-div {
+    /* カードのdivに適用するスタイル */
+    border: 1px solid #ddd;
+    padding: 1px;
+    margin: 1px;
+    text-align: center;
+    box-sizing: border-box;     /* パディングを含む幅の計算 */
+    /* その他のスタイルをここに追加 */
+}
+header{
+    width: 100%;
+    height: 50px;
+    text-align: center;
+    background-color: gray;
+    color: white;
+    font-size: small;
+    margin-bottom: 50px;
+}
+header h2{
+    padding: 10px 0;
+    margin: 0px;
+}
+footer{
+    text-align: center;
+    padding: 20px 0;
+    margin: 0;
+    background-color: gray;
+}
+footer h3{
+    color: rgb(255, 255, 255);
+}
+#release-period-container{
+    margin: 10px auto;
+    width: 125px;
+    text-align: left;
+    background-color: rgb(221, 221, 221);
+}
+#image-container{
+    margin-top: 25px;
+}
+
+/* タブレット（横）用スタイル */
+@media (max-width: 1655px) { /* 画面幅が1400px以下の場合 */
+    #image-container img {
+    width: 164.40px;
+    height: 229.80px;
+    margin: 10px;
+}
+    #image-container {
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); /* カードを自動でフィットさせる */
+    max-width: 1000px; /* 最大幅を設定して横幅を制限 */
+}
+    .card-div{
+    font-size: 10px;
+}}
+
+/* スマホ用スタイル */
+@media (max-width: 600px) { /* 画面幅が600px以下の場合 */
+    #image-container {
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); /* カードを自動でフィットさせる */
+    max-width: 400px; /* 最大幅を設定して横幅を制限 */
+}}
+
+/* スマホ用スタイル */
+@media (max-width: 400px) { /* 画面幅が400px以下の場合 */
+    #image-container img {
+    width: 137.00px;
+    height: 191.50px;
+    margin: 10px;
+}
+    #image-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); /* カードを自動でフィットさせる */
+    max-width: 400px; /* 最大幅を設定して横幅を制限 */
+}
+    h2{
+    font-size: 20px;
+}
+}
