@@ -1,3 +1,5 @@
+// ExportDeck.js
+
 // 40種類の画像URLを配列に格納
 
 document.getElementById('export-deck-button').addEventListener('click', () => {

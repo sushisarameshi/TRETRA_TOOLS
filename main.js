@@ -201,3 +201,4 @@ function adjustLayout() {
 window.addEventListener('resize', debounce(() => {
     adjustLayout(); // レイアウトの調整のみ行う
 }, 300)); // 300ミリ秒の遅延
+

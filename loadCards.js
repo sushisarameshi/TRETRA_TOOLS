@@ -1,19 +1,40 @@
 //loadCards.js
 
 const csvFilePath = './data/TRETRA_Card.csv';
+const cardRelPath = './data/Card_Rel.csv'; // Card_Rel.csvのパス
+
+// Card_Rel.csvを読み込み、IDと値のマッピングを作成する関数
+async function loadCardRel() {
+    try {
+        const response = await fetch(cardRelPath);
+        const data = await response.text();
+        const rows = data.split('\n').slice(1); // ヘッダーを除外
+        const relMap = {};
+        rows.forEach(row => {
+            const [id, value] = row.split(',');
+            relMap[id] = value.trim(); // IDと対応する値をマッピング
+        });
+        return relMap;
+    } catch (error) {
+        console.error('Error loading CSV (Card_Rel.csv):', error);
+        return {};
+    }
+}
 
 // CSVを読み込んでカードリストを生成する関数
 async function loadCards() {
     try {
+        const cardRelMap = await loadCardRel(); // relマッピングを読み込み
         const response = await fetch(csvFilePath);
         const data = await response.text();
         const rows = data.split('\n').slice(1); // ヘッダー行を除外
         const cards = rows.map(row => {
             const cols = row.split(',');
+            const relValue = cardRelMap[cols[2]] || cols[2]; // rel IDを値に置き換え
             return {
                 id: cols[0],
                 name: cols[1],
-                rel: cols[2],
+                rel: relValue,
                 streng: cols[3],
                 strengAdd: cols[4],
                 tres: cols[5],
@@ -29,7 +50,7 @@ async function loadCards() {
 
         return cards;
     } catch (error) {
-        console.error('Error loading CSV:', error);
+        console.error('Error loading CSV (DataBase):', error);
     }
 }
 
