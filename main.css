@@ -62,6 +62,47 @@ footer h3{
     margin-top: 25px;
 }
 
+/* デッキ画像出力_モーダルウィンドウ用 */
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 1;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+  }
+
+  .modal-content {
+    background-color: #fff;
+    margin: 15% auto;
+    padding: 20px;
+    width: 80%;
+    max-width: 1200px;
+  }
+
+  .popup-content img {
+    margin: 15% auto;
+    padding: 20px;
+    width: 80%;
+    max-width: 1200px;
+  }
+
+  .close {
+    color: #aaa;
+    float: right;
+    font-size: 28px;
+    font-weight: bold;
+  }
+
+  .close:hover,
+  .close:focus {
+    color: black;
+    cursor: pointer;
+  }
+  
+
 /* タブレット（横）用スタイル */
 @media (max-width: 1655px) { /* 画面幅が1400px以下の場合 */
     #image-container img {

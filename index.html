@@ -39,6 +39,15 @@
         <div id="image-container"></div>
         <!-- デッキ一覧画像出力の追加　ここから -->
 
+        <!-- モーダル構造 -->
+        <div id="deckModal" class="modal">
+            <div class="modal-content">
+              <span class="close">&times;</span>
+              <div id="popup-content"></div>
+              <br><button id="saveButton">画像を保存する</button>
+            </div>
+          </div>
+
         <button id="export-deck-button">デッキを画像として出力</button>
         <canvas id="deckCanvas" style="display:none;"></canvas>
         <!-- デッキ一覧画像出力の追加　ここまで -->
