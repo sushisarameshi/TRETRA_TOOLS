@@ -13,7 +13,8 @@ const supportedExtensions = ['png', 'jpg', 'jpeg'];
 async function getRandomImages(filteredCards) {
     const preselectedCardsInput = document.getElementById('preselected-cards').value;
     // カンマで区切られたカード番号を配列に変換
-    const preselectedCards = preselectedCardsInput.split(',').map(num => parseInt(num.trim(), 10)).filter(num => !isNaN(num));
+    // const preselectedCards = preselectedCardsInput.split(',').map(num => parseInt(num.trim(), 10)).filter(num => !isNaN(num));
+    const preselectedCards = [1,2];
 
     try {
         const filteredCardIds = filteredCards.map(card => parseInt(card.id, deck_size));
@@ -53,67 +54,101 @@ async function getRandomImages(filteredCards) {
     }
 }
 
+// ドロップダウンを指定数生成
+function createCardDropdown(cardId = '0') {
+    // 追加用のドロップダウンを作成
+    const select = document.createElement('select');
+    select.classList.add('card-select-dropdown');
+
+    // 追加用のドロップダウンで使用するオプションを作成
+    const defaultOption = document.createElement('option');
+    defaultOption.value = '0';
+    defaultOption.textContent = 'ランダム';
+    select.appendChild(defaultOption);
+
+    // カード1枚ずつのオプションを作成
+    window.allCards.forEach(card => {
+        const option = document.createElement('option');
+        option.value = card.id;
+        option.textContent = `${card.id}. ${card.name}`;
+        select.appendChild(option);
+    });
+
+    // 全てのカードから選択中のカードを探し、
+    select.addEventListener('change', function() {
+        const selectedCardId = parseInt(this.value, 10);
+        const card = window.allCards.find(card => card.id === selectedCardId);
+        if (card) {
+            displaySelectedCard(card);
+        }
+    });
+
+    return select;
+}
+
+// ドロップダウンを複数生成
+function populateCardDropdowns(numDropdowns) {
+    // 追加用のドロップダウンを作成
+    const dropdownContainer = document.getElementById('dropdown-container');
+    dropdownContainer.innerHTML = ''; 
+
+    // カードの個数分、ドロップダウンを作成する
+    for (let i = 0; i < numDropdowns; i++) {
+        const dropdown = createCardDropdown();
+        dropdownContainer.appendChild(dropdown);
+    }
+}
+
 // 画像を表示する
 let isDisplayingImages = false;
-
 async function displayImages() {
     if (isDisplayingImages) return; // すでに実行中ならば処理を中断
     isDisplayingImages = true; // フラグを立てる
 
+    // 初期化処理(一度カードのコンテナを削除する)
     const filteredCards = window.filteredCards || [];
-    const images = await getRandomImages(filteredCards);
     const container = document.getElementById("image-container");
-    container.innerHTML = '';
+    container.innerHTML = ''; // デッキ一覧を初期化
 
-    if (filteredCards.length === 0) {
-        const defaultFilteredCards = filterCardsByReleasePeriod(window.allCards);
-        const defaultImages = await getRandomImages(defaultFilteredCards);
+    // フィルタされたカードが空か判定、
+    // 空ならfilterCardsByReleasePeriodで全カードリストからフィルタされたカードを取得し、カードリストに基づいてgetRandomImages()でランダム画像を取得
+    // 空でなければ、フィルタされたカード(filteredCards)からgetRandomImages()でランダム画像を取得
+    const images = filteredCards.length === 0 ? 
+    await getRandomImages(filterCardsByReleasePeriod(window.allCards)) : 
+    await getRandomImages(filteredCards);
 
-        if (defaultImages.length > 0) {
-            for (const { url, card } of defaultImages) {
-                const div = document.createElement("div"); // 画像とタイトルを囲む<div>を作成
-                div.classList.add("card-div"); // カードごとのdivにクラスを追加
-                const img = document.createElement("img");
-
-                try {
-                    const exists = await imageExists(url);
-                    img.src = exists ? url : './data/img/card_list/0.png'; // 見つからない場合は代替画像を使用
-                } catch (error) {
-                    console.error(`Failed to check image existence for ${url}: ${error}`);
-                    img.src = './data/img/card_list/0.png';
-                }
-                const title = document.createElement("p"); // カードのタイトル要素を作成
-                title.textContent = card ? card.name : '不明なカード'; // カードが見つからない場合の処理
-
-                container.appendChild(div); // <div>をコンテナに追加
-                div.appendChild(title); // <div>にタイトルを追加
-                div.appendChild(img); // <div>に<img>を追加
-            }
-        } else {
-            alert('デフォルトで選択されたチェックボックスでも画像がありません。');
+    if (images.length > 0) {
+        for (const { url, card } of images) {
+            const cardElement = await createCardElement(url, card);
+            container.appendChild(cardElement);
         }
     } else {
-        for (const { url, card } of images) {
-            const div = document.createElement("div"); // 画像とタイトルを囲む<div>を作成
-            div.classList.add("card-div"); // カードごとのdivにクラスを追加
-            const img = document.createElement("img");
-
-            try {
-                const exists = await imageExists(url);
-                img.src = exists ? url : './data/img/card_list/0.png'; // 見つからない場合は代替画像を使用
-            } catch (error) {
-                console.error(`Failed to check image existence for ${url}: ${error}`);
-                img.src = './data/img/card_list/0.png';
-            }
-            const title = document.createElement("p"); // カードのタイトル要素を作成
-            title.textContent = card ? card.id + '. ' + card.name : '不明なカード'; // カードが見つからない場合の処理
-
-            container.appendChild(div); // <div>をコンテナに追加
-            div.appendChild(title); // <div>にタイトルを追加
-            div.appendChild(img); // <div>に<img>を追加
-        }
+        alert('画像がありません。');
     }
+
     isDisplayingImages = false; // 処理が完了したらフラグをリセット
+}
+
+// 画像とタイトルを表示するための関数
+async function createCardElement(url, card) {
+    const div = document.createElement("div");
+    div.classList.add("card-div");
+    const img = document.createElement("img");
+
+    try {
+        const exists = await imageExists(url);
+        img.src = exists ? url : './data/img/card_list/0.png';
+    } catch (error) {
+        console.error(`Failed to check image existence for ${url}: ${error}`);
+        img.src = './data/img/card_list/0.png';
+    }
+
+    const title = document.createElement("p");
+    title.textContent = card ? card.id + '. ' + card.name : '不明なカード';
+
+    div.appendChild(title);
+    div.appendChild(img);
+    return div;
 }
 
 // ページロード時に画像を表示 呼び出しが一度だけ行われるように変更
@@ -122,7 +157,8 @@ window.onload = () => {
         window.allCards = cards;
         const filteredCards = filterCardsByReleasePeriod(cards); // デフォルトでフィルタリング
         window.filteredCards = filteredCards;
-        populateCardSelect(cards); // プルダウンメニューにカードを追加
+        // populateCardSelect(cards); // プルダウンメニューにカードを追加
+        populateCardDropdowns(deck_size); //変更--------------
         displayImages(); // 初期表示
     }).catch(error => {
         console.error('Error loading cards:', error);
@@ -156,25 +192,25 @@ function populateCardSelect(cards) {
     });
 }
 
-// 検索ボックスの入力に基づいてプルダウンをフィルタリングする関数
-document.getElementById('card-search').addEventListener('keyup', function() {
-    const query = this.value.toLowerCase();
-    const filteredCards = window.allCards.filter(card => card.name.toLowerCase().includes(query));
-    populateCardSelect(filteredCards); // フィルタリングされたカードでプルダウンを更新
-});
+// // 検索ボックスの入力に基づいてプルダウンをフィルタリングする関数
+// document.getElementById('card-search').addEventListener('keyup', function() {
+//     const query = this.value.toLowerCase();
+//     const filteredCards = window.allCards.filter(card => card.name.toLowerCase().includes(query));
+//     populateCardSelect(filteredCards); // フィルタリングされたカードでプルダウンを更新
+// });
 
-// ボタンがクリックされたときに選択されたカードを追加
-document.getElementById('add-selected-card-button').addEventListener('click', () => {
-    const select = document.getElementById('card-select');
-    const selectedCardId = select.value;
-    const preselectedInput = document.getElementById('preselected-cards');
+// // ボタンがクリックされたときに選択されたカードを追加
+// document.getElementById('add-selected-card-button').addEventListener('click', () => {
+//     const select = document.getElementById('card-select');
+//     const selectedCardId = select.value;
+//     const preselectedInput = document.getElementById('preselected-cards');
     
-    if (selectedCardId && !preselectedInput.value.split(',').includes(selectedCardId)) {
-        preselectedInput.value += preselectedInput.value ? `,${selectedCardId}` : selectedCardId;
-    }
-});
+//     if (selectedCardId && !preselectedInput.value.split(',').includes(selectedCardId)) {
+//         preselectedInput.value += preselectedInput.value ? `,${selectedCardId}` : selectedCardId;
+//     }
+// });
 
-// デバウンス関数の例
+// デバウンス関数　発火のタイミング制御で必要だったはず
 function debounce(func, wait) {
     let timeout;
     return function(...args) {

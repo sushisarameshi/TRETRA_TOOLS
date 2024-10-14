@@ -16,9 +16,9 @@ export async function getRandomImageUrls(count, maxDuplicates = 2, preselected =
   // 対応する画像形式の配列
   const supportedFormats = ['png', 'jpg', 'jpeg', 'gif', 'webp'];
   let p_select_idx = 0;
+  
   // 事前選択されたカードのカウントを初期化
   for (const num of preselected) {
-    
     let imageUrl = `${basePath}${num}.png`;
     // 画像形式を検索
     for (const format of supportedFormats) {
