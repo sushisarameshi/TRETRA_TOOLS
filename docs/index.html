@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+    <link rel="stylesheet" href="main.css">
+    <title>[Beta] TRETERA デッキメーカー</title>
+</head>
+<body>
+    <header>
+        <div id="header-title">
+            <h2>TRETRA TOOLS</h2>
+            <h3>| ランダムデッキメーカー</h3>
+        </div>
+    </header>
+    <main>
+        <!-- ログインフォームの追加 -->
+        <!-- <div id="login-form">
+            <input type="email" id="email" placeholder="メールアドレス">
+            <input type="password" id="password" placeholder="パスワード">
+            <button id="login-button">ログイン</button>
+            <button id="logout-button" style="display:none;">ログアウト</button>
+        </div> -->
+        <!-- ログインフォームのここまで -->
+        <div>
+            <!-- カード追加 -->
+            <div id="add-card">
+                <p>＋カードを追加</p>
+                <div id="add-card-sett">
+                    <select id="card-select">
+                    <!-- カードのオプションがJavaScriptで追加される -->
+                    </select>
+                    <button id="add-selected-card-button">＋カードをデッキに追加</button>
+                    <br>
+                    <label for="card-search">カード検索:</label>
+                    <input type="text" id="card-search" placeholder="カード名を入力">
+                </div>
+                <!-- 非表示中 -->
+                <div id="preselected-cards-wrap">
+                    <label for="preselected-cards">事前に選択しているカード (カンマ区切り):</label>
+                    <input type="text" id="preselected-cards" placeholder="例: 1,5,7">
+                </div>
+                <div id="selected-cards-container"></div>
+            </div>
+            <div id="random-card">
+                <!-- 発売時期選択UIの追加 -->
+                <h4>ランダムカード抽出設定</h4>
+                <p>指定カードが10枚以下なら、足りない分をランダムに抽出して補完します
+                <br>以下チェックボックスで抽出する範囲を設定
+                </p>
+                <div id="release-period-container">
+                    <p>ランダムに抽出するカードの範囲を選択（複数選択OK）</p>
+                    <!-- JavaScriptで選択肢を動的に挿入 -->
+                </div>
+            </div>
+            <button id="change-images-button">デッキ作成</button>
+        </div>
+        <div id="image-container"></div>
+        
+        <!-- デッキ一覧画像出力の追加　ここから -->
+        <!-- モーダル構造 -->
+        <div id="deckModal" class="modal">
+            <div class="modal-content">
+                <span class="close">&times;</span>
+                <div id="popup-content"></div>
+                <br><button id="saveButton">画像を保存する</button>
+            </div>
+        </div>
+        <canvas id="deckCanvas" style="display:none;"></canvas>
+        
+        <button id="export-deck-button">デッキを画像として出力</button>
+        <!-- デッキ一覧画像出力の追加　ここまで -->
+    </main>
+    <footer>
+        <h3>TRETRA_TOOLS</h3>
+        <a href="https://tretra.wixsite.com/tretra">TRETRA公式サイト</a>
+    </footer>
+    <script src="https://cdn.jsdelivr.net/npm/wanakana@latest/wanakana.min.js"></script>
+    <!-- <script src="loadCards.js" type="module"></script>
+    <script src="main.js" type="module"></script> -->
+    <script src="ExportDeck.js" type="module"></script>
+    <script src="../dist/bundle.js" type="module"></script>
+    <!-- <script type="module">
+        import * as wanakana from 'https://cdn.jsdelivr.net/npm/wanakana@latest';
+    </script> -->
+
+
+</body>
+</html>
