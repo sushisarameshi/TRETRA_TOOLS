@@ -1,7 +1,7 @@
 // imageList.js
 
 export async function getRandomImageUrls(count, maxDuplicates = 2, preselected = [], filteredCardIds = []) {
-  const basePath = './data/img/card_list/'; // 画像が保存されているパス
+  const basePath = 'src/data/img/card_list/'; // 画像が保存されているパス
   const totalImages = filteredCardIds.length; // 画像の総数を計算
 
   // maxDuplicates 許可される最大の重複回数

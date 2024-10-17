@@ -1,7 +1,7 @@
 //loadCards.js
 
-const csvFilePath = './data/TRETRA_Card.csv';
-const cardRelPath = './data/Card_Rel.csv'; // Card_Rel.csvのパス
+const csvFilePath = 'src/data/TRETRA_Card.csv';
+const cardRelPath = 'src/data/Card_Rel.csv'; // Card_Rel.csvのパス
 
 // Card_Rel.csvを読み込み、IDと値のマッピングを作成する関数
 async function loadCardRel() {
