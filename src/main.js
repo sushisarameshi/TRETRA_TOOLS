@@ -188,7 +188,7 @@ document.getElementById('add-selected-card-button').addEventListener('click', ()
         cardDiv.setAttribute('data-card-id', selectedCardId);
         cardDiv.innerHTML = `
             <span>${cardName}</span>
-            <button class="remove-card-button"> × 削除</button>
+            <button class="remove-card-button"> － 削除</button>
         `;
         selectedCardsContainer.appendChild(cardDiv);
 
@@ -229,3 +229,23 @@ window.addEventListener('resize', debounce(() => {
     adjustLayout(); // レイアウトの調整のみ行う
 }, 300)); // 300ミリ秒の遅延
 
+const modalOpenButton = document.getElementById('export-deck-button');
+modalOpenButton.addEventListener('click', function() {
+    adjustModalSize(); // ウィンドウの高さに合わせてモーダルの高さを調整する関数
+    // モーダルを開く処理
+});
+
+// モーダルのサイズ調節用
+window.addEventListener('resize', function() {
+    adjustModalSize(); // ウィンドウの高さに合わせてモーダルの高さを調整する関数
+  });
+
+  function adjustModalSize(){
+    const modal = document.querySelector('.modal-content');
+    modal.style.maxHeight = window.innerHeight - 100 + 'px';
+    modal.style.margin = window.innerHeight/6 + 'px auto';
+}
+
+document.getElementById('modal-background').addEventListener('click', function() {
+    document.getElementById('deckModal').style.display = 'none'; // モーダルを閉じる
+});

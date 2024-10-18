@@ -10,7 +10,7 @@
     <header>
         <div id="header-title">
             <h2>TRETRA TOOLS</h2>
-            <h3>| ランダムデッキメーカー</h3>
+            <h3>| デッキメーカー</h3>
         </div>
     </header>
     <main>
@@ -27,13 +27,18 @@
             <div id="add-card">
                 <p>＋カードを追加</p>
                 <div id="add-card-sett">
-                    <select id="card-select">
-                    <!-- カードのオプションがJavaScriptで追加される -->
-                    </select>
-                    <button id="add-selected-card-button">＋カードをデッキに追加</button>
-                    <br>
-                    <label for="card-search">カード検索:</label>
-                    <input type="text" id="card-search" placeholder="カード名を入力">
+                    <div id="add-card-sett-search">
+                        <label for="card-search">カードを絞り込む:</label>
+                        <input type="text" id="card-search" placeholder="カード名を入力">
+                        <br>
+                        
+                        <select id="card-select">
+                            <!-- カードのオプションがJavaScriptで追加される -->
+                            </select>
+                    </div>
+                    <div id="add-card-sett-search">
+                        <button id="add-selected-card-button" class="blue-button">＋カードをデッキに追加</button>
+                    </div>
                 </div>
                 <!-- 非表示中 -->
                 <div id="preselected-cards-wrap">
@@ -45,7 +50,7 @@
             <div id="random-card">
                 <!-- 発売時期選択UIの追加 -->
                 <h4>ランダムカード抽出設定</h4>
-                <p>指定カードが10枚以下なら、足りない分をランダムに抽出して補完します
+                <p>指定カードが10枚以下のとき、足りない分をランダムに抽出して補完します
                 <br>以下チェックボックスで抽出する範囲を設定
                 </p>
                 <div id="release-period-container">
@@ -53,22 +58,24 @@
                     <!-- JavaScriptで選択肢を動的に挿入 -->
                 </div>
             </div>
-            <button id="change-images-button">デッキ作成</button>
+            <button id="change-images-button" class="blue-button">デッキ作成</button>
         </div>
         <div id="image-container"></div>
         
         <!-- デッキ一覧画像出力の追加　ここから -->
         <!-- モーダル構造 -->
         <div id="deckModal" class="modal">
+            <div id="modal-background"></div>
             <div class="modal-content">
                 <span class="close">&times;</span>
                 <div id="popup-content"></div>
-                <br><button id="saveButton">画像を保存する</button>
+                <br><button id="saveButton" class="blue-button">画像を保存する</button>
             </div>
+
         </div>
         <canvas id="deckCanvas" style="display:none;"></canvas>
         
-        <button id="export-deck-button">デッキを画像として出力</button>
+        <button id="export-deck-button" class="blue-button">デッキを画像として出力</button>
         <!-- デッキ一覧画像出力の追加　ここまで -->
     </main>
     <footer>
