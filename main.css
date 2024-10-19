@@ -252,6 +252,9 @@ header,main {
 .blue-button {
     width: 80%;
 }
+main{
+    width:100%;
+}
 }
 
 /* スマホ用スタイル */
