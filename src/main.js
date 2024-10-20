@@ -3,6 +3,7 @@
 // 40種類の画像URLを配列に格納
 import { loadCards, filterCardsByReleasePeriod } from './loadCards.js';
 import { getRandomImageUrls, imageExists } from './imageList.js';
+import { populateCardSelect } from './pullDown.js';
 import * as wanakana from 'wanakana';
 let deck_size = 10;
 
@@ -107,7 +108,8 @@ async function displayImages() {
                 img.src = './data/img/card_list/0.png';
             }
             const title = document.createElement("p"); // カードのタイトル要素を作成
-            title.textContent = card ? card.id + '. ' + card.name : '不明なカード'; // カードが見つからない場合の処理
+            const cardRel = parseFloat(card.rel) ? `[${card.rel}弾] ` : ` [${card.rel}] `;
+            title.textContent = card ? cardRel + card.name : '不明なカード'; // カードが見つからない場合の処理
 
             container.appendChild(div); // <div>をコンテナに追加
             div.appendChild(title); // <div>にタイトルを追加
@@ -138,24 +140,6 @@ document.getElementById('change-images-button').addEventListener('click', () => 
         displayImages();
     }
 });
-
-// カードのプルダウンメニューを生成する関数
-function populateCardSelect(cards) {
-    const select = document.getElementById('card-select');
-    select.innerHTML = ''; // 既存のオプションをクリア
-
-    cards.forEach(card => {
-        const option = document.createElement('option');
-        option.value = card.id;
-        if (parseFloat(card.rel)){
-            option.textContent = card.id + '. ' + card.name + ' [第' + card.rel + '弾]';
-        }else{
-            option.textContent = card.id + '. ' + card.name + ' [' + card.rel + ']';
-        }
-        
-        select.appendChild(option); // メモ：appendChildでhtmlに新しい要素を追加できる
-    });
-}
 
 // 検索ボックスの入力に基づいてプルダウンをフィルタリングする関数
 document.getElementById('card-search').addEventListener('keyup', function() {
@@ -209,19 +193,6 @@ function debounce(func, wait) {
         clearTimeout(timeout);
         timeout = setTimeout(() => func.apply(context, args), wait);
     };
-}
-
-function adjustLayout() {
-    // 必要に応じて画像のサイズやレイアウトを調整する処理を記述
-    // 例: 表示中のカード画像のサイズを変更するなど
-    const container = document.getElementById("image-container");
-    const images = container.getElementsByTagName("img");
-
-    for (let img of images) {
-        // ここで各画像のサイズをリサイズまたは再調整する
-        // img.style.width = "新しい幅";
-        // img.style.height = "新しい高さ";
-    }
 }
 
 // resizeイベントをデバウンスする

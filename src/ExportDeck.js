@@ -18,12 +18,13 @@ document.getElementById('export-deck-button').addEventListener('click', () => {
     const canvas = document.getElementById('deckCanvas');
     const ctx = canvas.getContext('2d');
 
-    const cardWidth = 274;  // カードの幅を調整
-    const cardHeight = 383;  // カードの高さを調整
+    const ClearSize = 1;    // 画質変更用
+    const cardWidth = 741 * ClearSize;  // カードの幅を調整
+    const cardHeight = 1036 * ClearSize;  // カードの高さを調整
     const gridColumns = 5;  // カラムの数
     const gridRows = Math.ceil(selectedCardUrls.length / gridColumns);
 
-    canvas.width = gridColumns * cardWidth;
+    canvas.width = gridColumns * cardWidth ;
     canvas.height = gridRows * cardHeight;
 
     let loadedImages = 0;
@@ -51,13 +52,13 @@ document.getElementById('saveButton').addEventListener('click', () => {
 function saveAsJPG(jpgUrl) {
     const link = document.createElement('a');
     link.href = jpgUrl;
-    link.download = 'deck.jpg';
+    link.download = 'deck.png';
     link.click();
 }
 
 function exportCanvasAsJPG() {
     const canvas = document.getElementById('deckCanvas');
-    const jpgUrl = canvas.toDataURL('image/jpeg', 1.0);  // 高品質
+    const jpgUrl = canvas.toDataURL('image/png');
 
 
     // // ポップアップ内容の追加
