@@ -239,7 +239,19 @@ header,main {
 }
     .card-div{
     font-size: 10px;
-}}
+}
+}
+
+@media (max-width: 1300px){
+    main{
+        width: 1025px;
+    }
+}
+@media (max-width: 1060px){
+    main{
+        width: 98%;
+    }
+}
 
 /* スマホ用スタイル */
 @media (max-width: 800px) { /* 画面幅が600px以下の場合 */
@@ -249,20 +261,19 @@ header,main {
 #card-select{
     width: 100%;
 }
-.blue-button {
-    width: 80%;
-}
-main{
-    width:100%;
-}
 }
 
 /* スマホ用スタイル */
-@media (max-width: 600px) { /* 画面幅が600px以下の場合 */
+@media (max-width: 605px) { /* 画面幅が600px以下の場合 */
     #image-container {
     grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); /* カードを自動でフィットさせる */
-    max-width: 400px; /* 最大幅を設定して横幅を制限 */
-    
+    max-width: 400px; /* 最大幅を設定して横幅を制限 */   
+}
+main{
+    width: 100%;
+}
+.blue-button {
+    width: 80%;
 }
 }
 
