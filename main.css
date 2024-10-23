@@ -179,6 +179,18 @@ header,main {
     overflow-y: auto; /* スクロールバーを有効に */
   }
 
+ #modal-sett{
+    width: 300px;
+    margin: 0 auto;
+    position: relative;
+  }
+  #modal-sett p{
+    position: absolute;
+    top: -13.5px;
+    left: 90px;
+  }
+  
+
   .popup-content img {
     margin: 15% auto;
     padding: 20px;

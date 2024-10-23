@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
     <link rel="stylesheet" href="main.css">
+    <link rel="stylesheet" href="button.css">
     <title>[Beta] TRETERA デッキメーカー</title>
 </head>
 <body>
@@ -69,6 +70,10 @@
             <div class="modal-content">
                 <span class="close">&times;</span>
                 <div id="popup-content"></div>
+                <div id="modal-sett">
+                    <div class="toggle" id="hight-quality-button"><input type="checkbox" name="check" id="hight-quality-check"/></div>
+                    <p>高画質で書き出す</p>
+                </div>
                 <br><button id="saveButton" class="blue-button">画像を保存する</button>
             </div>
 
@@ -87,6 +92,8 @@
     <script src="main.js" type="module"></script> -->
     <script src="src/ExportDeck.js" type="module"></script>
     <script src="dist/bundle.js" type="module"></script>
+    <script src="button.js" type="module"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js" ></script>
     <!-- <script type="module">
         import * as wanakana from 'https://cdn.jsdelivr.net/npm/wanakana@latest';
     </script> -->
