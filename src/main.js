@@ -58,6 +58,8 @@ async function getRandomImages(filteredCards) {
 // 画像を表示する
 let isDisplayingImages = false;
 
+// 入力：なし？
+// 出力：
 async function displayImages() {
     if (isDisplayingImages) return; // すでに実行中ならば処理を中断
     isDisplayingImages = true; // フラグを立てる
@@ -67,6 +69,7 @@ async function displayImages() {
     const container = document.getElementById("image-container");
     container.innerHTML = '';
 
+    // 画像初回読み込み時を切り分け(何のために切り分けたっけ？？？？？)
     if (filteredCards.length === 0) {
         const defaultFilteredCards = filterCardsByReleasePeriod(window.allCards);
         const defaultImages = await getRandomImages(defaultFilteredCards);
@@ -91,7 +94,7 @@ async function displayImages() {
                 div.appendChild(title); // <div>にタイトルを追加
                 div.appendChild(img); // <div>に<img>を追加
             }
-        } else {
+        } else { // 例外用
             alert('デフォルトで選択されたチェックボックスでも画像がありません。');
         }
     } else {
