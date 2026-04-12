@@ -78,11 +78,64 @@ export async function getRandomImageUrls(count, maxDuplicates = 2, preselected =
   return randomImageUrls;
 }
 
-export async function imageExists(url) {
-  try {
-      const response = await fetch(url, { method: 'HEAD' });
-      return response.ok; // ステータスが200-299であればtrueを返す
-  } catch (error) {
-      return false; // ネットワークエラーなどが発生した場合はfalseを返す
+export async function getRandomThumbnailUrls(count, maxDuplicates = 2, preselected = [], filteredCardIds = []) {
+  const basePath = 'src/data/img/thumbnails/'; // サムネイル画像のパス
+  const totalImages = filteredCardIds.length;
+
+  if (totalImages * maxDuplicates < count) {
+    throw new Error("指定した範囲では十分な数のカードを選択できません。カードの範囲を見直してください。");
   }
+
+  const randomImageUrls = [];
+  const imageCounts = {};
+  const supportedFormats = ['png', 'jpg', 'jpeg', 'gif', 'webp'];
+  let p_select_idx = 0;
+
+  // 事前選択されたカードの処理
+  for (const num of preselected) {
+    let imageUrl = `${basePath}${num}.png`;
+    for (const format of supportedFormats) {
+      const possibleImageUrl = `${basePath}${preselected[p_select_idx]}.${format}`;
+      if (await imageExists(possibleImageUrl)) {
+        imageUrl = possibleImageUrl;
+        break;
+      }
+    }
+    if (!imageCounts[imageUrl]) {
+      imageCounts[imageUrl] = 0;
+    }
+    if (imageCounts[imageUrl] < maxDuplicates) {
+      randomImageUrls.push(imageUrl);
+      imageCounts[imageUrl]++;
+    }
+    p_select_idx++;
+  }
+
+  // ランダム選択
+  while (randomImageUrls.length < count) {
+    const randomIndex = Math.floor(Math.random() * filteredCardIds.length);
+    let imageUrl = null;
+
+    for (const format of supportedFormats) {
+      const possibleImageUrl = `${basePath}${filteredCardIds[randomIndex]}.${format}`;
+      if (await imageExists(possibleImageUrl)) {
+        imageUrl = possibleImageUrl;
+        break;
+      }
+    }
+
+    if (!imageUrl) {
+      continue;
+    }
+
+    if (!imageCounts[imageUrl]) {
+      imageCounts[imageUrl] = 0;
+    }
+
+    if (imageCounts[imageUrl] < maxDuplicates) {
+      randomImageUrls.push(imageUrl);
+      imageCounts[imageUrl]++;
+    }
+  }
+  return randomImageUrls;
 }

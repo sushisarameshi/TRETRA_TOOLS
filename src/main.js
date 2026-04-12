@@ -2,7 +2,7 @@
 
 // 40種類の画像URLを配列に格納
 import { loadCards, filterCardsByReleasePeriod } from './loadCards.js';
-import { getRandomImageUrls, imageExists } from './imageList.js';
+import { getRandomImageUrls, getRandomThumbnailUrls } from './imageList.js';
 import { populateCardSelect } from './pullDown.js';
 import * as wanakana from 'wanakana';
 import './ExportDeck.js';
@@ -23,7 +23,7 @@ async function getRandomImages(filteredCards) {
 
     try {
         const filteredCardIds = filteredCards.map(card => parseInt(card.id, deck_size));
-        const imageUrls = await getRandomImageUrls(deck_size, 2, preselectedCards, filteredCardIds);
+        const imageUrls = await getRandomThumbnailUrls(deck_size, 2, preselectedCards, filteredCardIds);
 
         // カード番号で昇順にソート
         imageUrls.sort((a, b) => {
@@ -76,7 +76,7 @@ async function displayImages() {
     // 画像初回読み込み時を切り分け(何のために切り分けたっけ？？？？？)
     if (filteredCards.length === 0) {
         const defaultFilteredCards = filterCardsByReleasePeriod(window.allCards);
-        const defaultImages = await getRandomImages(defaultFilteredCards);
+        const defaultImages = await getRandomThumbnailUrls(deck_size, 2, [], defaultFilteredCards);
 
         if (defaultImages.length > 0) {
             for (const { url, card } of defaultImages) {
@@ -84,13 +84,7 @@ async function displayImages() {
                 div.classList.add("card-div"); // カードごとのdivにクラスを追加
                 const img = document.createElement("img");
 
-                try {
-                    const exists = await imageExists(url);
-                    img.src = exists ? url : './data/img/card_list/0.png'; // 見つからない場合は代替画像を使用
-                } catch (error) {
-                    console.error(`Failed to check image existence for ${url}: ${error}`);
-                    img.src = './data/img/card_list/0.png';
-                }
+                img.src = url; // 画像の有無検証をせず、直接URLを設定してすぐ表示
                 const title = document.createElement("p"); // カードのタイトル要素を作成
                 title.textContent = card ? card.name : '不明なカード'; // カードが見つからない場合の処理
 
@@ -107,13 +101,7 @@ async function displayImages() {
             div.classList.add("card-div"); // カードごとのdivにクラスを追加
             const img = document.createElement("img");
 
-            try {
-                const exists = await imageExists(url);
-                img.src = exists ? url : './data/img/card_list/0.png'; // 見つからない場合は代替画像を使用
-            } catch (error) {
-                console.error(`Failed to check image existence for ${url}: ${error}`);
-                img.src = './data/img/card_list/0.png';
-            }
+            img.src = url; // 画像の有無検証をせず、直接URLを設定してすぐ表示
             const title = document.createElement("p"); // カードのタイトル要素を作成
             const cardRel = parseFloat(card.rel) ? `[${card.rel}弾] ` : ` [${card.rel}] `;
             title.textContent = card ? cardRel + card.name : '不明なカード'; // カードが見つからない場合の処理
