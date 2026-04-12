@@ -5,6 +5,10 @@ import { loadCards, filterCardsByReleasePeriod } from './loadCards.js';
 import { getRandomImageUrls, imageExists } from './imageList.js';
 import { populateCardSelect } from './pullDown.js';
 import * as wanakana from 'wanakana';
+import './ExportDeck.js';
+import './button.js';
+import './app.js';
+
 let deck_size = 10;
 
 // サポートする画像形式の配列
@@ -122,18 +126,18 @@ async function displayImages() {
     isDisplayingImages = false; // 処理が完了したらフラグをリセット
 }
 
-// ページロード時に画像を表示 呼び出しが一度だけ行われるように変更
-window.onload = () => {
-    loadCards().then(cards => {
-        window.allCards = cards;
-        const filteredCards = filterCardsByReleasePeriod(cards); // デフォルトでフィルタリング
-        window.filteredCards = filteredCards;
-        populateCardSelect(cards); // プルダウンメニューにカードを追加
-        displayImages(); // 初期表示
-    }).catch(error => {
-        console.error('Error loading cards:', error);
-    });
-};
+ //ページロード時に画像を表示 呼び出しが一度だけ行われるように変更
+// window.onload = () => {
+//     loadCards().then(cards => {
+//         window.allCards = cards;
+//         const filteredCards = filterCardsByReleasePeriod(cards); // デフォルトでフィルタリング
+//         window.filteredCards = filteredCards;
+//         populateCardSelect(cards); // プルダウンメニューにカードを追加
+//         displayImages(); // 初期表示
+//     }).catch(error => {
+//         console.error('Error loading cards:', error);
+//     });
+// };
 
 // ボタンがクリックされたときに画像を変更
 document.getElementById('change-images-button').addEventListener('click', () => {

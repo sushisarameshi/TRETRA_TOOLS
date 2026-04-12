@@ -87,12 +87,16 @@
         <h3>TRETRA_TOOLS</h3>
         <a href="https://tretra.wixsite.com/tretra">TRETRA公式サイト</a>
     </footer>
-    <script src="https://cdn.jsdelivr.net/npm/wanakana@latest/wanakana.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/wanakana@5.3.1/wanakana.min.js"></script>
+    <script>window.wanakana = wanakana;</script> <!-- wanakana をグローバルに登録 -->
     <!-- <script src="loadCards.js" type="module"></script>
     <script src="main.js" type="module"></script> -->
-    <script src="src/ExportDeck.js" type="module"></script>
+    <!-- <script src="src/ExportDeck.js" type="module"></script> -->
+    
     <script src="dist/bundle.js" type="module"></script>
-    <script src="button.js" type="module"></script>
+    <!-- <script src="src/main.js" type="module"></script>-->    <!-- 既存の main.js を読み込む -->
+    <!-- <script src="src/app.js" type="module"></script> -->    <!-- app.js はコメントアウト -->
+    <!-- <script src="button.js" type="module"></script> -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js" ></script>
     <!-- <script type="module">
         import * as wanakana from 'https://cdn.jsdelivr.net/npm/wanakana@latest';
