@@ -79,14 +79,17 @@ function renderSelectedCards(selectedCards, onRemove) {
 function renderCardImages(imageEntries) {
     const container = document.getElementById('image-container');
     if (!container) {
-        console.error('image-container not found');  // デバッグログ
+        console.error('image-container not found');
         return;
     }
 
     container.innerHTML = '';
-    console.log('rendering images:', imageEntries);  // デバッグログ
 
-    imageEntries.forEach(entry => {
+    // 上部に表示されるカードを優先表示し、体感速度を改善します。
+    const priorityCount = 6;
+    const deferredChunkSize = 4;
+
+    function createCardNode(entry, index) {
         const div = document.createElement('div');
         div.className = 'card-div';
 
@@ -96,18 +99,51 @@ function renderCardImages(imageEntries) {
         const img = document.createElement('img');
         img.src = entry.url;
         img.alt = entry.card ? entry.card.name : 'card image';
-        img.loading = 'lazy';
+        const isPriority = index < priorityCount;
+        img.loading = isPriority ? 'eager' : 'lazy';
+        img.decoding = isPriority ? 'sync' : 'async';
+        img.fetchPriority = isPriority ? 'high' : 'low';
         img.style.maxWidth = '100%';
         img.style.height = 'auto';
-
-        console.log('setting img.src:', img.src);  // デバッグログ
+        // 元の高品質画像のURLをdata属性に保存
+        if (entry.originalUrl) {
+            img.dataset.originalUrl = entry.originalUrl;
+        }
 
         div.appendChild(title);
         div.appendChild(img);
-        container.appendChild(div);
+        return div;
+    }
+
+    const priorityEntries = imageEntries.slice(0, priorityCount);
+    const deferredEntries = imageEntries.slice(priorityCount);
+
+    priorityEntries.forEach((entry, index) => {
+        container.appendChild(createCardNode(entry, index));
     });
 
-    console.log('container children:', container.children.length);  // デバッグログ
+    if (deferredEntries.length === 0) {
+        return;
+    }
+
+    let cursor = 0;
+    const appendDeferred = () => {
+        const end = Math.min(cursor + deferredChunkSize, deferredEntries.length);
+        for (let i = cursor; i < end; i++) {
+            container.appendChild(createCardNode(deferredEntries[i], priorityCount + i));
+        }
+        cursor = end;
+
+        if (cursor < deferredEntries.length) {
+            if (typeof window.requestIdleCallback === 'function') {
+                window.requestIdleCallback(appendDeferred, { timeout: 120 });
+            } else {
+                window.requestAnimationFrame(appendDeferred);
+            }
+        }
+    };
+
+    appendDeferred();
 }
 
 export { clearContainer, populateCardSelect, renderReleasePeriodOptions, renderSelectedCards, renderCardImages };

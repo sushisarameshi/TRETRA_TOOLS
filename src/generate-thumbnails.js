@@ -27,7 +27,7 @@ console.log(`Processing ${files.length} images...`);
 
     try {
       await sharp(inputPath)
-        .resize(275, 275, {
+        .resize(320, 320, {
           fit: 'inside',
           withoutEnlargement: true
         })

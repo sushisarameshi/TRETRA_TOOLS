@@ -42,11 +42,15 @@
                     </div>
                 </div>
                 <!-- 非表示中 -->
-                <div id="preselected-cards-wrap">
+                <div id="preselected-cards-wrap" style="display: none;">
                     <label for="preselected-cards">事前に選択しているカード (カンマ区切り):</label>
                     <input type="text" id="preselected-cards" placeholder="例: 1,5,7">
                 </div>
                 <div id="selected-cards-container"></div>
+                <!-- 一括解除ボタンの追加 -->
+                <div id="clear-all-cards-wrap">
+                    <button id="clear-all-selected-cards-button" class="red-button">全カードを解除</button>
+                </div>
             </div>
             <div id="random-card">
                 <!-- 発売時期選択UIの追加 -->

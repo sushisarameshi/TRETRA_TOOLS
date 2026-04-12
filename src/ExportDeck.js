@@ -4,7 +4,8 @@
 
 document.getElementById('export-deck-button').addEventListener('click', () => {
     const cardDivs = document.querySelectorAll('.card-div img');  // 各カードの<img>要素を取得
-    const selectedCardUrls = Array.from(cardDivs).map(img => img.src);  // 画像のURLを配列に変換
+    // 元の高品質画像のURLを使用（data-original-url属性があれば、なければサムネイルを使用）
+    const selectedCardUrls = Array.from(cardDivs).map(img => img.dataset.originalUrl || img.src);
 
     // モーダル表示
     const modal = document.getElementById('deckModal');
@@ -21,9 +22,10 @@ document.getElementById('export-deck-button').addEventListener('click', () => {
 document.getElementById('hight-quality-button').addEventListener('click', () => {
     let checked = document.getElementById('hight-quality-check').checked;
     const cardDivs = document.querySelectorAll('.card-div img');  // 各カードの<img>要素を取得
-    const selectedCardUrls = Array.from(cardDivs).map(img => img.src);  // 画像のURLを配列に変換
+    // 元の高品質画像のURLを使用（data-original-url属性があれば、なければサムネイルを使用）
+    const selectedCardUrls = Array.from(cardDivs).map(img => img.dataset.originalUrl || img.src);
     let ClearSize = 0.5;
-    if (!checked){
+    if (checked){
         ClearSize = 1;
     }
     ExportDeckContents(selectedCardUrls, ClearSize);

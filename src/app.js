@@ -51,6 +51,13 @@ function syncSelectedCardInput() {
   input.value = state.selectedCardIds.join(',');
 }
 
+// 選択IDの並びを保ったまま、表示用カード配列を作成します（重複を保持）。
+function getSelectedCardsForDisplay() {
+  return state.selectedCardIds
+    .map(id => state.allCards.find(card => card.id === id))
+    .filter(card => !!card);
+}
+
 // 事前選択カードを state に登録し、UI を更新します。
 function addSelectedCard(cardId) {
   if (!cardId) return;
@@ -59,22 +66,30 @@ function addSelectedCard(cardId) {
 
   state.selectedCardIds.push(cardId);
   syncSelectedCardInput();
-
-  const selectedCards = state.allCards.filter(card => state.selectedCardIds.includes(card.id));
-  renderSelectedCards(selectedCards, removeSelectedCard);
+  renderSelectedCards(getSelectedCardsForDisplay(), removeSelectedCard);
 }
 
 // 事前選択カードを削除します。
 function removeSelectedCard(cardId) {
-  state.selectedCardIds = state.selectedCardIds.filter(id => id !== cardId);
+  // 同一カードが複数ある場合は、1回の削除で1枚だけ減らします。
+  const targetIndex = state.selectedCardIds.indexOf(cardId);
+  if (targetIndex === -1) return;
+  state.selectedCardIds.splice(targetIndex, 1);
   syncSelectedCardInput();
-  const selectedCards = state.allCards.filter(card => state.selectedCardIds.includes(card.id));
-  renderSelectedCards(selectedCards, removeSelectedCard);
+  renderSelectedCards(getSelectedCardsForDisplay(), removeSelectedCard);
+}
+
+// 事前選択カードをすべて削除します。
+function clearAllSelectedCards() {
+  state.selectedCardIds = [];
+  syncSelectedCardInput();
+  renderSelectedCards([], removeSelectedCard);
 }
 
 function setupEventListeners() {
   const searchInput = document.getElementById('card-search');
   const addButton = document.getElementById('add-selected-card-button');
+  const clearAllButton = document.getElementById('clear-all-selected-cards-button');
   const changeButton = document.getElementById('change-images-button');
   const releasePeriodContainer = document.getElementById('release-period-container');
 
@@ -91,6 +106,13 @@ function setupEventListeners() {
       const select = document.getElementById('card-select');
       const selectedCardId = select ? select.value : '';
       addSelectedCard(selectedCardId);
+    });
+  }
+
+  // 一括解除ボタンのイベントリスナー追加
+  if (clearAllButton) {
+    clearAllButton.addEventListener('click', () => {
+      clearAllSelectedCards();
     });
   }
 
@@ -116,10 +138,16 @@ async function renderImages() {
   state.selectedCardIds = getSelectedCardIds();
 
   const imageEntries = await getRandomImages(state.filteredCards, state.selectedCardIds, deckSize);
-  const entries = imageEntries.map(item => ({
-    url: item.url,
-    card: state.allCards.find(card => parseInt(card.id, 10) === item.id)
-  }));
+  const entries = imageEntries.map(item => {
+    const card = state.allCards.find(card => parseInt(card.id, 10) === item.id);
+    // 元の高品質画像のパスを構築（サムネイルではなく元画像を使う）
+    const originalUrl = `src/data/img/card_list/${item.id}.png`;
+    return {
+      url: item.url,
+      originalUrl: originalUrl,
+      card: card
+    };
+  });
 
   renderCardImages(entries);
 }
