@@ -15,7 +15,7 @@ document.getElementById('export-deck-button').addEventListener('click', () => {
     document.querySelector('.close').addEventListener('click', () => {
         modal.style.display = 'none';
     });
-    const ClearSize = 0.5;
+    const ClearSize = 0.4;
     ExportDeckContents(selectedCardUrls, ClearSize);
 });
 
@@ -24,7 +24,7 @@ document.getElementById('hight-quality-button').addEventListener('click', () => 
     const cardDivs = document.querySelectorAll('.card-div img');  // 各カードの<img>要素を取得
     // 元の高品質画像のURLを使用（data-original-url属性があれば、なければサムネイルを使用）
     const selectedCardUrls = Array.from(cardDivs).map(img => img.dataset.originalUrl || img.src);
-    let ClearSize = 0.5;
+    let ClearSize = 0.4;
     if (checked){
         ClearSize = 1;
     }
