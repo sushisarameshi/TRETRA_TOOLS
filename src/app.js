@@ -1,89 +1,127 @@
 // app.js
-// このモジュールはアプリの起動と状態管理を担当します。
-// データローダー・UI・検索・画像抽出を組み合わせてアプリを初期化します。
+// このモジュールはアプリの起動、状態管理、イベント登録、
+// 画像表示の制御を担当します。
 
 import { loadCards, getUniqueReleasePeriods } from './dataLoader.js';
 import { renderReleasePeriodOptions, populateCardSelect, renderCardImages, renderSelectedCards, clearContainer } from './ui.js';
-import { getRandomImageUrls } from './imagePicker.js';
+import { getRandomImages } from './imagePicker.js';
 import { filterCardsBySearch } from './search.js';
 import { filterCardsByReleasePeriod } from './loadCards.js';
 
+const deckSize = 10; // 1回表示するカード枚数
 const state = {
-    allCards: [],
-    filteredCards: [],
-    selectedCardIds: []
+  allCards: [],
+  filteredCards: [],
+  selectedCardIds: []
 };
 
-// アプリ起動時に呼び出す初期化関数。
-// カードデータを読み込み、UIを構築し、イベントリスナーを登録します。
+// アプリ起動処理
 async function initApp() {
-    const cards = await loadCards();                            // カードデータを読み込みます。
-    state.allCards = cards;                                     // すべてのカードデータを状態に保存します。
-    state.filteredCards = [...cards];                           // 初期状態ではすべてのカードを表示対象とする
-    window.allCards = cards;  // 互換性のため一時的に残す         // window.filteredCards は検索や発売時期フィルタリングの結果を保持するために使用します。
-    window.filteredCards = state.filteredCards;                 // これにより、検索や発売時期のフィルタリングを行うたびに window.filteredCards を更新し、UI描画関数は常に最新のフィルタリング結果を参照できるようになります。
+  const cards = await loadCards();
 
-    // UIの初期化：発売時期のオプションを生成し、カード選択ドロップダウンを描画します。
-    const periods = getUniqueReleasePeriods(cards);
-    renderReleasePeriodOptions(periods);    // 発売時期のチェックボックスを描画
-    populateCardSelect(cards);              // カード選択用のドロップダウンを描画
-    renderImages();                         // 初期画像表示
-    setupEventListeners();                  // ユーザー操作のイベントリスナー登録
+  state.allCards = cards;
+  state.filteredCards = [...cards];
+  state.selectedCardIds = [];
+
+  window.allCards = cards;
+  window.filteredCards = state.filteredCards;
+
+  const periods = getUniqueReleasePeriods(cards);
+  renderReleasePeriodOptions(periods);
+  populateCardSelect(cards);
+  renderSelectedCards([]);
+  setupEventListeners();
+  await renderImages();
 }
 
-// ユーザー操作に対応するイベントを登録します。
+// preselected-cards の値を state に変換します。
+function getSelectedCardIds() {
+  const input = document.getElementById('preselected-cards');
+  if (!input || !input.value) return [];
+  return input.value
+    .split(',')
+    .map(id => id.trim())
+    .filter(id => id !== '');
+}
+
+// state.selectedCardIds の値を hidden input に反映します。
+function syncSelectedCardInput() {
+  const input = document.getElementById('preselected-cards');
+  if (!input) return;
+  input.value = state.selectedCardIds.join(',');
+}
+
+// 事前選択カードを state に登録し、UI を更新します。
+function addSelectedCard(cardId) {
+  if (!cardId) return;
+  const duplicateCount = state.selectedCardIds.filter(id => id === cardId).length;
+  if (duplicateCount >= 2 || state.selectedCardIds.length >= 10) return;
+
+  state.selectedCardIds.push(cardId);
+  syncSelectedCardInput();
+
+  const selectedCards = state.allCards.filter(card => state.selectedCardIds.includes(card.id));
+  renderSelectedCards(selectedCards, removeSelectedCard);
+}
+
+// 事前選択カードを削除します。
+function removeSelectedCard(cardId) {
+  state.selectedCardIds = state.selectedCardIds.filter(id => id !== cardId);
+  syncSelectedCardInput();
+  const selectedCards = state.allCards.filter(card => state.selectedCardIds.includes(card.id));
+  renderSelectedCards(selectedCards, removeSelectedCard);
+}
+
 function setupEventListeners() {
-    const searchInput = document.getElementById('card-search');
-    const addButton = document.getElementById('add-selected-card-button');
-    const changeButton = document.getElementById('change-images-button');
-    const releasePeriodContainer = document.getElementById('release-period-container');
+  const searchInput = document.getElementById('card-search');
+  const addButton = document.getElementById('add-selected-card-button');
+  const changeButton = document.getElementById('change-images-button');
+  const releasePeriodContainer = document.getElementById('release-period-container');
 
-    if (searchInput) {
-        searchInput.addEventListener('keyup', event => {
-            state.filteredCards = filterCardsBySearch(state.allCards, event.target.value);
-            populateCardSelect(state.filteredCards);
-        });
-    }
+  if (searchInput) {
+    searchInput.addEventListener('keyup', event => {
+      state.filteredCards = filterCardsBySearch(state.allCards, event.target.value);
+      window.filteredCards = state.filteredCards;
+      populateCardSelect(state.filteredCards);
+    });
+  }
 
-    if (addButton) {
-        addButton.addEventListener('click', () => {
-            // ここに選択カードを事前選択リストに追加する処理を実装します。
-            // 追加後は renderSelectedCards() を呼び出してUIを更新します。
-        });
-    }
+  if (addButton) {
+    addButton.addEventListener('click', () => {
+      const select = document.getElementById('card-select');
+      const selectedCardId = select ? select.value : '';
+      addSelectedCard(selectedCardId);
+    });
+  }
 
-    if (changeButton) {
-        changeButton.addEventListener('click', () => {
-            renderImages();
-        });
-    }
+  if (changeButton) {
+    changeButton.addEventListener('click', () => {
+      renderImages();
+    });
+  }
 
-    if (releasePeriodContainer) {
-        releasePeriodContainer.addEventListener('change', () => {
-            state.filteredCards = filterCardsByReleasePeriod(state.allCards);
-            populateCardSelect(state.filteredCards);
-            renderImages();
-        });
-    }
+  if (releasePeriodContainer) {
+    releasePeriodContainer.addEventListener('change', () => {
+      state.filteredCards = filterCardsByReleasePeriod(state.allCards);
+      window.filteredCards = state.filteredCards;
+      populateCardSelect(state.filteredCards);
+      renderImages();
+    });
+  }
 }
 
 // 画像表示処理の入口。
-// フィルタ済みカードのIDから画像URL候補を生成し、UI描画に渡します。
 async function renderImages() {
-    clearContainer('image-container');
-    const filteredIds = state.filteredCards.map(card => card.id);
-    console.log('filteredIds:', filteredIds);  // デバッグログ
+  clearContainer('image-container');
+  state.selectedCardIds = getSelectedCardIds();
 
-    const imageEntries = await getRandomImageUrls(10, 2, state.selectedCardIds, filteredIds);
-    console.log('imageEntries:', imageEntries);  // デバッグログ
+  const imageEntries = await getRandomImages(state.filteredCards, state.selectedCardIds, deckSize);
+  const entries = imageEntries.map(item => ({
+    url: item.url,
+    card: state.allCards.find(card => parseInt(card.id, 10) === item.id)
+  }));
 
-    const entries = imageEntries.map(item => ({
-        url: item.urls[0] || '',
-        card: state.allCards.find(card => card.id === item.id)
-    }));
-    console.log('entries:', entries);  // デバッグログ
-
-    renderCardImages(entries);
+  renderCardImages(entries);
 }
 
 export { initApp, state, setupEventListeners, renderImages };

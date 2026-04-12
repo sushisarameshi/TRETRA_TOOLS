@@ -91,16 +91,9 @@ export async function getRandomThumbnailUrls(count, maxDuplicates = 2, preselect
   const supportedFormats = ['png', 'jpg', 'jpeg', 'gif', 'webp'];
   let p_select_idx = 0;
 
-  // 事前選択されたカードの処理
+  // 事前選択されたカードの処理（サムネイルは PNG のみ）
   for (const num of preselected) {
-    let imageUrl = `${basePath}${num}.png`;
-    for (const format of supportedFormats) {
-      const possibleImageUrl = `${basePath}${preselected[p_select_idx]}.${format}`;
-      if (await imageExists(possibleImageUrl)) {
-        imageUrl = possibleImageUrl;
-        break;
-      }
-    }
+    const imageUrl = `${basePath}${preselected[p_select_idx]}.png`;
     if (!imageCounts[imageUrl]) {
       imageCounts[imageUrl] = 0;
     }
@@ -111,22 +104,10 @@ export async function getRandomThumbnailUrls(count, maxDuplicates = 2, preselect
     p_select_idx++;
   }
 
-  // ランダム選択
+  // ランダム選択（サムネイルは PNG のみ）
   while (randomImageUrls.length < count) {
     const randomIndex = Math.floor(Math.random() * filteredCardIds.length);
-    let imageUrl = null;
-
-    for (const format of supportedFormats) {
-      const possibleImageUrl = `${basePath}${filteredCardIds[randomIndex]}.${format}`;
-      if (await imageExists(possibleImageUrl)) {
-        imageUrl = possibleImageUrl;
-        break;
-      }
-    }
-
-    if (!imageUrl) {
-      continue;
-    }
+    const imageUrl = `${basePath}${filteredCardIds[randomIndex]}.png`;
 
     if (!imageCounts[imageUrl]) {
       imageCounts[imageUrl] = 0;

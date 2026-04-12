@@ -3,9 +3,9 @@ const fs = require('fs');
 const path = require('path');
 
 // 元画像ディレクトリ
-const sourceDir = path.join(__dirname, '../data/img/card_list');
+const sourceDir = path.join(__dirname, './data/img/card_list');
 // サムネイル出力ディレクトリ
-const thumbDir = path.join(__dirname, '../data/img/thumbnails');
+const thumbDir = path.join(__dirname, './data/img/thumbnails');
 
 // ディレクトリ作成
 if (!fs.existsSync(thumbDir)) {
@@ -13,27 +13,32 @@ if (!fs.existsSync(thumbDir)) {
 }
 
 // 画像ファイルを取得
-const files = fs.readdirSync(sourceDir).filter(file => /\.(png|jpg|jpeg)$/i.test(file));
+const files = fs.readdirSync(sourceDir).filter(file => /\.(png|jpg|jpeg|gif|webp)$/i.test(file));
 
 console.log(`Processing ${files.length} images...`);
 
-files.forEach(async (file) => {
-  const inputPath = path.join(sourceDir, file);
-  const outputPath = path.join(thumbDir, file);
+// async/await で全画像処理が完了するまで待ちます
+(async () => {
+  for (const file of files) {
+    const inputPath = path.join(sourceDir, file);
+    // 出力は全て PNG で統一（拡張子を .png に変更）
+    const outputFileName = file.replace(/\.[^.]+$/, '.png');
+    const outputPath = path.join(thumbDir, outputFileName);
 
-  try {
-    await sharp(inputPath)
-      .resize(200, 200, { // サムネイルサイズ（必要に応じて調整）
-        fit: 'inside',
-        withoutEnlargement: true
-      })
-      .jpeg({ quality: 80 }) // 品質調整
-      .toFile(outputPath);
+    try {
+      await sharp(inputPath)
+        .resize(275, 275, {
+          fit: 'inside',
+          withoutEnlargement: true
+        })
+        .png()
+        .toFile(outputPath);
 
-    console.log(`Generated thumbnail: ${file}`);
-  } catch (error) {
-    console.error(`Error processing ${file}:`, error);
+      console.log(`Generated thumbnail: ${outputFileName}`);
+    } catch (error) {
+      console.error(`Error processing ${file}:`, error);
+    }
   }
-});
 
-console.log('Thumbnail generation complete.');
+  console.log('Thumbnail generation complete.');
+})();

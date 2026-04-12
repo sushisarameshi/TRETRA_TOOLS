@@ -1,57 +1,34 @@
 // imagePicker.js
-// このモジュールはカードIDから画像URL候補を生成し、
-// ならびにランダム抽出のロジックを提供します。
+// このモジュールは、フィルタ済みカードIDと事前選択IDを受け取り、
+// 画像URLを選択して順序を整えて返す役割だけを持ちます。
 
-const basePath = 'src/data/img/card_list/';
-const supportedFormats = ['png', 'jpg', 'jpeg', 'gif', 'webp'];
+import { getRandomThumbnailUrls } from './imageList.js';
 
-// 1つのカードIDに対応する全ての画像形式の候補URLを生成します。
-function buildImageUrlsFromId(cardId) {
-    return supportedFormats.map(extension => `${basePath}${cardId}.${extension}`);
+// フィルタ済みカードデータからカードIDだけを抽出します。
+function toCardIds(filteredCards) {
+  return filteredCards
+    .map(card => parseInt(card.id, 10))
+    .filter(id => !Number.isNaN(id));
 }
 
-// 画像数を満たすまで、フィルタ済みカードIDからランダムにIDを選びます。
-// preselected は先に選ばれているカードIDリストです。
-// maxDuplicates は同じカードIDを許容する上限です。
-function pickRandomIds(filteredCardIds, count, maxDuplicates = 2, preselected = []) {
-    const imageCounts = {};
-    const result = [];
-
-    preselected.forEach(id => {
-        const key = `${id}`;
-        imageCounts[key] = (imageCounts[key] || 0) + 1;
-        if (imageCounts[key] <= maxDuplicates) {
-            result.push(id);
-        }
-    });
-
-    while (result.length < count && filteredCardIds.length > 0) {
-        const randomIndex = Math.floor(Math.random() * filteredCardIds.length);
-        const id = filteredCardIds[randomIndex];
-        const key = `${id}`;
-        imageCounts[key] = imageCounts[key] || 0;
-
-        if (imageCounts[key] < maxDuplicates) {
-            imageCounts[key] += 1;
-            result.push(id);
-        }
-    }
-
-    return result.slice(0, count);
+// 画像URLからカードIDを抽出します。
+function getCardIdFromUrl(url) {
+  const match = url.match(/(\d+)\.(?:png|jpg|jpeg|gif|webp)$/);
+  return match ? parseInt(match[1], 10) : NaN;
 }
 
-// ランダム抽出したカードIDごとに画像URL候補を返します。
-// 実際に存在する画像形式の判定は、このモジュールの外で行う想定です。
-async function getRandomImageUrls(count, maxDuplicates = 2, preselected = [], filteredCardIds = []) {
-    const selectedIds = pickRandomIds(filteredCardIds, count, maxDuplicates, preselected);
-    const urls = [];
+// フィルタ済みカードから、事前選択と重複制限を考慮して画像を取得します。
+export async function getRandomImages(filteredCards, preselectedCardIds = [], deckSize = 10) {
+  const filteredCardIds = toCardIds(filteredCards);
+  const imageUrls = await getRandomThumbnailUrls(deckSize, 2, preselectedCardIds, filteredCardIds);
 
-    selectedIds.forEach(id => {
-        const possibleUrls = buildImageUrlsFromId(id);
-        urls.push({ id, urls: possibleUrls });
-    });
+  const sortedEntries = imageUrls
+    .map(url => ({ url, id: getCardIdFromUrl(url) }))
+    .filter(entry => !Number.isNaN(entry.id))
+    .sort((a, b) => a.id - b.id);
 
-    return urls;
+  return sortedEntries;
 }
 
-export { buildImageUrlsFromId, pickRandomIds, getRandomImageUrls };
+export { getRandomThumbnailUrls } from './imageList.js';
+
