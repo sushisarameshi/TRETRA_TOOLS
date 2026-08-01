@@ -9,6 +9,11 @@ function clearContainer(containerId) {
     }
 }
 
+// 収録弾タグが純粋な数値かどうかを判定します。
+function isNumericReleaseTag(value) {
+    return /^\d+(?:\.\d+)?$/.test(String(value || '').trim());
+}
+
 // カード選択用の<select>要素を生成します。
 function populateCardSelect(cards) {
     const select = document.getElementById('card-select');
@@ -19,7 +24,9 @@ function populateCardSelect(cards) {
     cards.forEach(card => {
         const option = document.createElement('option');
         option.value = card.id;
-        const releaseInfo = card.rel ? (parseFloat(card.rel) ? `[${card.rel}弾]` : ` [${card.rel}]`) : '';
+        const releaseInfo = card.rel
+            ? (isNumericReleaseTag(card.rel) ? `[${card.rel}弾]` : ` [${card.rel}]`)
+            : '';
         option.textContent = `${releaseInfo} ${card.name}`;
         select.appendChild(option);
     });
@@ -41,7 +48,7 @@ function renderReleasePeriodOptions(periods) {
 
         const label = document.createElement('label');
         label.htmlFor = checkbox.id;
-        label.textContent = parseFloat(period) ? ` 第${period}弾` : ` ${period}`;
+        label.textContent = isNumericReleaseTag(period) ? ` 第${period}弾` : ` ${period}`;
 
         container.appendChild(checkbox);
         container.appendChild(label);

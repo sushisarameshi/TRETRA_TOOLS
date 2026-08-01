@@ -58,11 +58,22 @@ function getSelectedCardsForDisplay() {
     .filter(card => !!card);
 }
 
+// 指定カードと同じ sameCardId を持つカードが選択済みリストに何枚あるかを数えます。
+// イラスト差分カード（異なるID・同じ性能）を同一カードとして扱います。
+function countSameCardSelected(cardId) {
+  const card = state.allCards.find(c => c.id === cardId);
+  if (!card) return 0;
+  return state.selectedCardIds.filter(id => {
+    const c = state.allCards.find(c => c.id === id);
+    return c && c.sameCardId === card.sameCardId;
+  }).length;
+}
+
 // 事前選択カードを state に登録し、UI を更新します。
 function addSelectedCard(cardId) {
   if (!cardId) return;
-  const duplicateCount = state.selectedCardIds.filter(id => id === cardId).length;
-  if (duplicateCount >= 2 || state.selectedCardIds.length >= 10) return;
+  // sameCardId 単位で重複数をチェック（イラスト差分も同一カードとして制限）
+  if (countSameCardSelected(cardId) >= 2 || state.selectedCardIds.length >= 10) return;
 
   state.selectedCardIds.push(cardId);
   syncSelectedCardInput();
@@ -127,7 +138,6 @@ function setupEventListeners() {
       state.filteredCards = filterCardsByReleasePeriod(state.allCards);
       window.filteredCards = state.filteredCards;
       populateCardSelect(state.filteredCards);
-      renderImages();
     });
   }
 }

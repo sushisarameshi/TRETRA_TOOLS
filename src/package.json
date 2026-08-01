@@ -5,7 +5,8 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "build": "webpack --mode production",
-    "generate-thumbnails": "node generate-thumbnails.js"
+    "generate-thumbnails": "node generate-thumbnails.js",
+    "convert-db": "node convert-db.js"
   },
   "keywords": [],
   "author": "",

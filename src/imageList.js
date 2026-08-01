@@ -80,7 +80,26 @@ export async function getRandomImageUrls(count, maxDuplicates = 2, preselected =
 
 export async function getRandomThumbnailUrls(count, maxDuplicates = 2, preselected = [], filteredCardIds = []) {
   const basePath = 'src/data/img/thumbnails/'; // サムネイル画像のパス
-  const totalImages = filteredCardIds.length;
+
+  // manifest.json を取得し、実際に画像が存在するIDだけに絞り込みます。
+  // 画像のないカード（新規追加カード等）がランダム抽出に入らないようにします。
+  let validIdSet = null;
+  try {
+    const res = await fetch(`${basePath}manifest.json`);
+    if (res.ok) {
+      const ids = await res.json();
+      validIdSet = new Set(ids);
+    }
+  } catch (_) {
+    // manifest.json が取得できない場合はフィルタなしで続行します
+  }
+
+  // 画像が存在するカードIDのみに絞り込みます
+  const availableCardIds = validIdSet
+    ? filteredCardIds.filter(id => validIdSet.has(id))
+    : filteredCardIds;
+
+  const totalImages = availableCardIds.length;
 
   if (totalImages * maxDuplicates < count) {
     throw new Error("指定した範囲では十分な数のカードを選択できません。カードの範囲を見直してください。");
@@ -88,12 +107,21 @@ export async function getRandomThumbnailUrls(count, maxDuplicates = 2, preselect
 
   const randomImageUrls = [];
   const imageCounts = {};
-  const supportedFormats = ['png', 'jpg', 'jpeg', 'gif', 'webp'];
   let p_select_idx = 0;
 
   // 事前選択されたカードの処理（サムネイルは PNG のみ）
   for (const num of preselected) {
-    const imageUrl = `${basePath}${preselected[p_select_idx]}.png`;
+    const cardId = parseInt(num, 10);
+    if (Number.isNaN(cardId)) {
+      p_select_idx++;
+      continue;
+    }
+    // 画像が存在しないカードはスキップします
+    if (validIdSet && !validIdSet.has(cardId)) {
+      p_select_idx++;
+      continue;
+    }
+    const imageUrl = `${basePath}${cardId}.png`;
     if (!imageCounts[imageUrl]) {
       imageCounts[imageUrl] = 0;
     }
@@ -106,8 +134,8 @@ export async function getRandomThumbnailUrls(count, maxDuplicates = 2, preselect
 
   // ランダム選択（サムネイルは PNG のみ）
   while (randomImageUrls.length < count) {
-    const randomIndex = Math.floor(Math.random() * filteredCardIds.length);
-    const imageUrl = `${basePath}${filteredCardIds[randomIndex]}.png`;
+    const randomIndex = Math.floor(Math.random() * availableCardIds.length);
+    const imageUrl = `${basePath}${availableCardIds[randomIndex]}.png`;
 
     if (!imageCounts[imageUrl]) {
       imageCounts[imageUrl] = 0;
