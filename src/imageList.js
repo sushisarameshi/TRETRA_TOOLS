@@ -116,11 +116,7 @@ export async function getRandomThumbnailUrls(count, maxDuplicates = 2, preselect
       p_select_idx++;
       continue;
     }
-    // 画像が存在しないカードはスキップします
-    if (validIdSet && !validIdSet.has(cardId)) {
-      p_select_idx++;
-      continue;
-    }
+    // 事前選択は常にカードIDのURLを優先し、表示側でサムネイル欠損時フォールバックします。
     const imageUrl = `${basePath}${cardId}.png`;
     if (!imageCounts[imageUrl]) {
       imageCounts[imageUrl] = 0;

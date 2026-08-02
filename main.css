@@ -96,16 +96,21 @@ footer a:visited{
 }
 
 #image-container img {
-    width: 274px;
-    height: 383px;
-    margin: 10px;
+    width: 100%;
+    max-width: 100%;
+    height: auto;
+    margin: 0 auto;
+    display: block;
 }
 #image-container {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); /* カードを自動でフィットさせる */
+    grid-template-columns: repeat(var(--deck-columns, 3), minmax(0, 1fr));
+    justify-content: center;
+    justify-items: center;
     gap: 10px; /* カード間のスペース */
-    max-width: 1600px; /* 最大幅を設定して横幅を制限 */
+    width: min(1600px, 100%);
     margin: 0 auto; /* コンテナを中央に配置 */
+    box-sizing: border-box;
 }
 header,main {
     text-align: center;
@@ -118,13 +123,49 @@ header,main {
 
 
 .card-div {
-    /* カードのdivに適用するスタイル */
-    border: 1px solid #ddd;
-    padding: 1px;
-    margin: 1px;
+    border: 1px solid #d6dde6;
+    background: linear-gradient(160deg, #f7fbff 0%, #eef3f9 100%);
+    border-radius: 8px;
+    box-shadow: 0 4px 10px rgba(31, 55, 80, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.8);
+    padding: 6px 4px 8px;
+    margin: 0;
     text-align: center;
     box-sizing: border-box;     /* パディングを含む幅の計算 */
-    /* その他のスタイルをここに追加 */
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    width: 100%;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+.card-div:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 18px rgba(31, 55, 80, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.85);
+}
+
+.card-div p {
+    margin: 0 0 6px;
+    color: #2e3a48;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    font-size: 14px;
+    line-height: 1.25;
+    overflow-wrap: anywhere;
+    min-height: 2.6em;
+    align-self: flex-start;
+}
+
+.card-div img {
+    margin-top: auto;
+}
+
+/* 列数が多いときはタイトルを小さくして見切れを抑えます。 */
+#image-container.image-cols-4 .card-div p,
+#image-container.image-cols-5 .card-div p {
+    font-size: 12px;
+    line-height: 1.2;
+    min-height: 2.4em;
 }
 /*ユーザの操作を必要としないため、カードIDの入力ボックスは非表示に変更*/
 #preselected-cards-wrap{
@@ -168,6 +209,8 @@ header,main {
     top: 0;
     width: 100%;
     height: 100%;
+        align-items: center;
+        justify-content: center;
   }
 
   .modal-content {
@@ -177,6 +220,7 @@ header,main {
     max-width: 1200px;
     max-height: 100vh; /* ウィンドウの高さに基づく最大高さ */
     overflow-y: auto; /* スクロールバーを有効に */
+        box-sizing: border-box;
   }
 
  #modal-sett{
@@ -238,16 +282,135 @@ header,main {
     margin-top: 20px;
 }
 
+#display-columns-control {
+    margin: 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+}
+
+#display-columns-panel {
+    margin: 12px auto 0;
+    padding: 8px 10px 10px;
+    width: 600px;
+    text-align: left;
+    background-color: rgb(61, 61, 61);
+    color: white;
+    box-sizing: border-box;
+    position: relative;
+}
+
+#display-columns-control {
+    padding-top: 18px;
+}
+
+#display-columns-control p {
+    margin: 0;
+    color: #ffffff;
+    font-weight: 700;
+    position: absolute;
+    top: 8px;
+    left: 12px;
+    white-space: nowrap;
+}
+
+#display-columns-value {
+    min-width: 20px;
+    display: inline-block;
+    text-align: center;
+    font-weight: 700;
+    color: #ffffff;
+}
+
+.small-control-button {
+    width: 46px;
+    min-width: 46px;
+    padding: 0.4rem 0;
+    margin: 0;
+}
+
+.card-image-loading {
+    transform: rotateY(0deg);
+    opacity: 0.95;
+}
+
+.card-image-loaded {
+    animation: card-flip-reveal 0.35s ease;
+    transform: rotateY(360deg);
+}
+
+.card-preview-modal {
+    display: none;
+    position: fixed;
+    inset: 0;
+    z-index: 999;
+    align-items: center;
+    justify-content: center;
+}
+
+.card-preview-backdrop {
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.6);
+}
+
+.card-preview-content {
+    position: relative;
+    z-index: 1;
+    width: min(92vw, 520px);
+    background: #ffffff;
+    border-radius: 12px;
+    padding: 12px;
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.35);
+    text-align: center;
+}
+
+.card-preview-title {
+    margin: 4px 0 10px;
+    font-weight: 700;
+    color: #2e3a48;
+}
+
+.card-preview-image {
+    width: min(86vw, 430px);
+    height: auto;
+    border-radius: 8px;
+}
+
+.card-preview-close {
+    position: absolute;
+    top: 6px;
+    right: 8px;
+    border: 0;
+    background: transparent;
+    font-size: 24px;
+    color: #808080;
+    cursor: pointer;
+}
+
+@keyframes card-flip-reveal {
+    from {
+        transform: rotateY(0deg);
+        opacity: 0.6;
+    }
+    to {
+        transform: rotateY(360deg);
+        opacity: 1;
+    }
+}
+
 /* タブレット（横）用スタイル */
 @media (max-width: 1655px) { /* 画面幅が1400px以下の場合 */
     #image-container img {
-    width: 164.40px;
-    height: 229.80px;
-    margin: 10px;
+    width: 100%;
+    max-width: 100%;
+    height: auto;
+    margin: 0 auto;
 }
     #image-container {
-    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); /* カードを自動でフィットさせる */
-    max-width: 1000px; /* 最大幅を設定して横幅を制限 */
+    grid-template-columns: repeat(var(--deck-columns, 3), minmax(0, 1fr));
+    width: min(1100px, 100%);
 }
     .card-div{
     font-size: 10px;
@@ -270,16 +433,42 @@ header,main {
 #add-card,#random-card{
     width: 80%;
 }
+#display-columns-panel {
+    width: 80%;
+}
 #card-select{
     width: 100%;
+}
+
+#image-container {
+    grid-template-columns: repeat(var(--deck-columns, 2), minmax(0, 1fr));
+    width: 100%;
+}
+
+#image-container img {
+    width: 100%;
+    max-width: 100%;
+    height: auto;
+    margin: 0 auto;
+}
+
+.modal-content {
+    width: 96%;
+    max-height: 92vh;
+    padding: 10px;
+}
+
+#popup-content img {
+    width: 96% !important;
+    margin: 8px auto;
 }
 }
 
 /* スマホ用スタイル */
 @media (max-width: 605px) { /* 画面幅が600px以下の場合 */
     #image-container {
-    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); /* カードを自動でフィットさせる */
-    max-width: 400px; /* 最大幅を設定して横幅を制限 */   
+    grid-template-columns: repeat(var(--deck-columns, 2), minmax(0, 1fr));
+    width: 100%;
 }
 main{
     width: 100%;
@@ -292,14 +481,15 @@ main{
 /* スマホ用スタイル */
 @media (max-width: 400px) { /* 画面幅が400px以下の場合 */
     #image-container img {
-    width: 137.00px;
-    height: 191.50px;
-    margin: 10px;
+    width: 100%;
+    max-width: 100%;
+    height: auto;
+    margin: 0 auto;
 }
     #image-container {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); /* カードを自動でフィットさせる */
-    max-width: 400px; /* 最大幅を設定して横幅を制限 */
+    grid-template-columns: repeat(var(--deck-columns, 2), minmax(0, 1fr));
+    width: 100%;
 }
     h2{
     font-size: 20px;

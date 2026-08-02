@@ -20,6 +20,56 @@ let allowedReleasePeriods = new Set([
     'INSTANT_TACTICS'
 ]);
 
+// ダブルクォートと改行を含むCSVを安全に解析します。
+function parseCsvRecords(text) {
+    const records = [];
+    let row = [];
+    let field = '';
+    let inQuotes = false;
+
+    for (let i = 0; i < text.length; i++) {
+        const ch = text[i];
+
+        if (ch === '"') {
+            if (inQuotes && text[i + 1] === '"') {
+                field += '"';
+                i++;
+            } else {
+                inQuotes = !inQuotes;
+            }
+            continue;
+        }
+
+        if (ch === ',' && !inQuotes) {
+            row.push(field);
+            field = '';
+            continue;
+        }
+
+        if ((ch === '\n' || ch === '\r') && !inQuotes) {
+            if (ch === '\r' && text[i + 1] === '\n') {
+                i++;
+            }
+            row.push(field);
+            records.push(row);
+            row = [];
+            field = '';
+            continue;
+        }
+
+        field += ch;
+    }
+
+    // 末尾行を追加
+    row.push(field);
+    const hasAnyValue = row.some(cell => String(cell || '').trim() !== '');
+    if (hasAnyValue) {
+        records.push(row);
+    }
+
+    return records;
+}
+
 // テキストを正規化して、小文字・余分な空白を削除します。
 function normalizeText(text) {
     if (!text) return '';
@@ -42,11 +92,12 @@ function buildSearchKey(card) {
 async function loadCardRel() {
     const response = await fetch(cardRelPath);
     const text = await response.text();
-    const rows = text.split('\n').slice(1);
+    const rows = parseCsvRecords(text).slice(1);
     const relMap = {};
 
-    rows.forEach(row => {
-        const [id, value] = row.split(',');
+    rows.forEach(cols => {
+        const id = cols[0];
+        const value = cols[1];
         if (!id) return;
         relMap[id.trim()] = value ? value.trim() : '';
     });
@@ -59,13 +110,15 @@ async function loadAllowedReleasePeriods() {
     try {
         const response = await fetch(otherTagsPath);
         const text = await response.text();
-        const rows = text.split('\n');
+        const rows = parseCsvRecords(text);
         const tags = new Set();
 
         let headerCols = null;
-        rows.forEach(row => {
-            if (!headerCols && row.includes('ID') && row.includes('タグ名')) {
-                headerCols = row.split(',').map(col => col.trim());
+        rows.forEach(cols => {
+            if (headerCols) return;
+            const normalized = cols.map(col => String(col || '').trim());
+            if (normalized.includes('ID') && normalized.includes('タグ名')) {
+                headerCols = normalized;
             }
         });
 
@@ -79,8 +132,7 @@ async function loadAllowedReleasePeriods() {
             return;
         }
 
-        rows.forEach(row => {
-            const cols = row.split(',');
+        rows.forEach(cols => {
             const id = (cols[idIndex] || '').trim();
             const tagName = (cols[tagNameIndex] || '').trim();
             if (!id || !tagName) return;
@@ -105,11 +157,10 @@ async function loadCards() {
     const cardRelMap = await loadCardRel();
     const response = await fetch(csvFilePath);
     const text = await response.text();
-    const rows = text.split('\n').slice(1);
+    const rows = parseCsvRecords(text).slice(1);
 
     const cards = rows
-        .map(row => row.split(','))
-        .filter(cols => cols.length >= 2 && cols[0])
+        .filter(cols => cols.length >= 2 && cols[0] && /^\d+$/.test(String(cols[0]).trim()))
         .map(cols => {
             const relValue = cardRelMap[cols[2]] || cols[2] || '';
             const card = {

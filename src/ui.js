@@ -9,6 +9,65 @@ function clearContainer(containerId) {
     }
 }
 
+function updateImageContainerColumns(displayColumns = 3) {
+    const container = document.getElementById('image-container');
+    if (!container) return;
+    container.style.setProperty('--deck-columns', String(displayColumns));
+    container.classList.remove('image-cols-2', 'image-cols-3', 'image-cols-4', 'image-cols-5');
+    container.classList.add(`image-cols-${displayColumns}`);
+}
+
+function ensureCardPreviewModal() {
+    let modal = document.getElementById('card-preview-modal');
+    if (modal) return modal;
+
+    modal = document.createElement('div');
+    modal.id = 'card-preview-modal';
+    modal.className = 'card-preview-modal';
+    modal.innerHTML = `
+        <div class="card-preview-backdrop"></div>
+        <div class="card-preview-content">
+            <button type="button" class="card-preview-close" aria-label="閉じる">×</button>
+            <p class="card-preview-title"></p>
+            <img class="card-preview-image" alt="card preview" />
+        </div>
+    `;
+
+    const close = () => {
+        modal.style.display = 'none';
+    };
+
+    modal.querySelector('.card-preview-close').addEventListener('click', close);
+    modal.querySelector('.card-preview-backdrop').addEventListener('click', close);
+
+    document.addEventListener('keydown', event => {
+        if (event.key === 'Escape' && modal.style.display === 'flex') {
+            close();
+        }
+    });
+
+    document.body.appendChild(modal);
+    return modal;
+}
+
+function openCardPreview(entry) {
+    const modal = ensureCardPreviewModal();
+    const title = modal.querySelector('.card-preview-title');
+    const image = modal.querySelector('.card-preview-image');
+    const relText = entry.card && entry.card.rel
+        ? (isNumericReleaseTag(entry.card.rel) ? `[${entry.card.rel}弾] ` : `[${entry.card.rel}] `)
+        : '';
+
+    title.textContent = entry.card
+        ? `${relText}${entry.card.name}`
+        : 'カード詳細';
+
+    image.src = entry.originalUrl || entry.url;
+    image.alt = entry.card ? entry.card.name : 'card preview';
+
+    modal.style.display = 'flex';
+}
+
 // 収録弾タグが純粋な数値かどうかを判定します。
 function isNumericReleaseTag(value) {
     return /^\d+(?:\.\d+)?$/.test(String(value || '').trim());
@@ -83,7 +142,7 @@ function renderSelectedCards(selectedCards, onRemove) {
 }
 
 // 画像カード一覧を描画します。
-function renderCardImages(imageEntries) {
+function renderCardImages(imageEntries, displayColumns = 3) {
     const container = document.getElementById('image-container');
     if (!container) {
         console.error('image-container not found');
@@ -91,6 +150,7 @@ function renderCardImages(imageEntries) {
     }
 
     container.innerHTML = '';
+    updateImageContainerColumns(displayColumns);
 
     // 上部に表示されるカードを優先表示し、体感速度を改善します。
     const priorityCount = 6;
@@ -101,11 +161,16 @@ function renderCardImages(imageEntries) {
         div.className = 'card-div';
 
         const title = document.createElement('p');
-        title.textContent = entry.card ? `${entry.card.rel ? `[${entry.card.rel}弾] ` : ''}${entry.card.name}` : '不明なカード';
+        const relText = entry.card && entry.card.rel
+            ? (isNumericReleaseTag(entry.card.rel) ? `[${entry.card.rel}弾] ` : `[${entry.card.rel}] `)
+            : '';
+        title.textContent = entry.card ? `${relText}${entry.card.name}` : '不明なカード';
 
         const img = document.createElement('img');
-        img.src = entry.url;
+        // 読み込み中はカード背面(0)を表示し、完了後に本画像へ切り替えます。
+        img.src = 'src/data/img/thumbnails/0.png';
         img.alt = entry.card ? entry.card.name : 'card image';
+        img.classList.add('card-image-loading');
         const isPriority = index < priorityCount;
         img.loading = isPriority ? 'eager' : 'lazy';
         img.decoding = isPriority ? 'sync' : 'async';
@@ -116,6 +181,35 @@ function renderCardImages(imageEntries) {
         if (entry.originalUrl) {
             img.dataset.originalUrl = entry.originalUrl;
         }
+        img.dataset.thumbnailUrl = entry.url;
+
+        const loadedImage = new Image();
+        loadedImage.decoding = 'async';
+        loadedImage.onload = () => {
+            img.src = entry.url;
+            img.classList.remove('card-image-loading');
+            img.classList.add('card-image-loaded');
+        };
+        loadedImage.onerror = () => {
+            const fallbackImage = new Image();
+            fallbackImage.decoding = 'async';
+            fallbackImage.onload = () => {
+                img.src = entry.originalUrl;
+                img.classList.remove('card-image-loading');
+                img.classList.add('card-image-loaded');
+            };
+            fallbackImage.onerror = () => {
+                img.src = 'src/data/img/thumbnails/0.png';
+                img.classList.remove('card-image-loading');
+                img.classList.add('card-image-loaded');
+            };
+            fallbackImage.src = entry.originalUrl || '';
+        };
+        loadedImage.src = entry.url;
+
+        img.addEventListener('click', () => {
+            openCardPreview(entry);
+        });
 
         div.appendChild(title);
         div.appendChild(img);
@@ -153,4 +247,4 @@ function renderCardImages(imageEntries) {
     appendDeferred();
 }
 
-export { clearContainer, populateCardSelect, renderReleasePeriodOptions, renderSelectedCards, renderCardImages };
+export { clearContainer, populateCardSelect, renderReleasePeriodOptions, renderSelectedCards, renderCardImages, updateImageContainerColumns };

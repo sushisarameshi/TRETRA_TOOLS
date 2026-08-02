@@ -3,7 +3,7 @@
 // 画像表示の制御を担当します。
 
 import { loadCards, getUniqueReleasePeriods } from './dataLoader.js';
-import { renderReleasePeriodOptions, populateCardSelect, renderCardImages, renderSelectedCards, clearContainer } from './ui.js';
+import { renderReleasePeriodOptions, populateCardSelect, renderCardImages, renderSelectedCards, clearContainer, updateImageContainerColumns } from './ui.js';
 import { getRandomImages } from './imagePicker.js';
 import { filterCardsBySearch } from './search.js';
 import { filterCardsByReleasePeriod } from './loadCards.js';
@@ -12,11 +12,18 @@ const deckSize = 10; // 1回表示するカード枚数
 const state = {
   allCards: [],
   filteredCards: [],
-  selectedCardIds: []
+  selectedCardIds: [],
+  displayColumns: 3,
+  currentEntries: []
 };
+
+function getDefaultDisplayColumns() {
+  return window.matchMedia('(max-width: 768px)').matches ? 3 : 5;
+}
 
 // アプリ起動処理
 async function initApp() {
+  state.displayColumns = getDefaultDisplayColumns();
   const cards = await loadCards();
 
   state.allCards = cards;
@@ -102,7 +109,22 @@ function setupEventListeners() {
   const addButton = document.getElementById('add-selected-card-button');
   const clearAllButton = document.getElementById('clear-all-selected-cards-button');
   const changeButton = document.getElementById('change-images-button');
+  const decreaseColumnsButton = document.getElementById('decrease-columns-button');
+  const increaseColumnsButton = document.getElementById('increase-columns-button');
+  const columnsValue = document.getElementById('display-columns-value');
   const releasePeriodContainer = document.getElementById('release-period-container');
+
+  const updateColumnsLabel = () => {
+    if (columnsValue) {
+      columnsValue.textContent = String(state.displayColumns);
+    }
+  };
+
+  const applyColumnsLayoutOnly = () => {
+    updateImageContainerColumns(state.displayColumns);
+  };
+
+  updateColumnsLabel();
 
   if (searchInput) {
     searchInput.addEventListener('keyup', event => {
@@ -133,6 +155,22 @@ function setupEventListeners() {
     });
   }
 
+  if (decreaseColumnsButton) {
+    decreaseColumnsButton.addEventListener('click', () => {
+      state.displayColumns = Math.max(2, state.displayColumns - 1);
+      updateColumnsLabel();
+      applyColumnsLayoutOnly();
+    });
+  }
+
+  if (increaseColumnsButton) {
+    increaseColumnsButton.addEventListener('click', () => {
+      state.displayColumns = Math.min(5, state.displayColumns + 1);
+      updateColumnsLabel();
+      applyColumnsLayoutOnly();
+    });
+  }
+
   if (releasePeriodContainer) {
     releasePeriodContainer.addEventListener('change', () => {
       state.filteredCards = filterCardsByReleasePeriod(state.allCards);
@@ -150,7 +188,7 @@ async function renderImages() {
   const imageEntries = await getRandomImages(state.filteredCards, state.selectedCardIds, deckSize);
   const entries = imageEntries.map(item => {
     const card = state.allCards.find(card => parseInt(card.id, 10) === item.id);
-    // 元の高品質画像のパスを構築（サムネイルではなく元画像を使う）
+    // 元の高品質画像のパス（表示側で必要に応じてフォールバック）。
     const originalUrl = `src/data/img/card_list/${item.id}.png`;
     return {
       url: item.url,
@@ -159,7 +197,8 @@ async function renderImages() {
     };
   });
 
-  renderCardImages(entries);
+  state.currentEntries = entries;
+  renderCardImages(state.currentEntries, state.displayColumns);
 }
 
 export { initApp, state, setupEventListeners, renderImages };

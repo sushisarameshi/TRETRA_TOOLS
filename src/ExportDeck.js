@@ -2,57 +2,100 @@
 
 // 40種類の画像URLを配列に格納
 
-document.getElementById('export-deck-button').addEventListener('click', () => {
-    const cardDivs = document.querySelectorAll('.card-div img');  // 各カードの<img>要素を取得
-    // 元の高品質画像のURLを使用（data-original-url属性があれば、なければサムネイルを使用）
-    const selectedCardUrls = Array.from(cardDivs).map(img => img.dataset.originalUrl || img.src);
+let lastExportMimeType = 'image/png';
 
-    // モーダル表示
+function getSelectedCardUrls() {
+    const cardDivs = document.querySelectorAll('.card-div img');
+
+    return Array.from(cardDivs).map(img => {
+        const original = img.dataset.originalUrl || img.src;
+        return original;
+    });
+}
+
+function computeExportSettings(isHighQuality) {
+    return {
+        clearSize: isHighQuality ? 1 : 0.4,
+        gridColumns: 5,
+        mimeType: 'image/png',
+        quality: 1
+    };
+}
+
+function openDeckModal() {
     const modal = document.getElementById('deckModal');
-    modal.style.display = 'block';
+    if (!modal) return;
+    modal.style.display = 'flex';
+}
+
+function closeDeckModal() {
+    const modal = document.getElementById('deckModal');
+    if (!modal) return;
+    modal.style.display = 'none';
+}
+
+document.getElementById('export-deck-button').addEventListener('click', () => {
+    // モーダル表示
+    openDeckModal();
     
     // モーダルを閉じる機能
-    document.querySelector('.close').addEventListener('click', () => {
-        modal.style.display = 'none';
-    });
-    const ClearSize = 0.4;
-    ExportDeckContents(selectedCardUrls, ClearSize);
+    const closeButton = document.querySelector('.close');
+    if (closeButton) {
+        closeButton.onclick = closeDeckModal;
+    }
+
+    const isHighQuality = document.getElementById('hight-quality-check').checked;
+    const selectedCardUrls = getSelectedCardUrls();
+    const settings = computeExportSettings(isHighQuality);
+    ExportDeckContents(selectedCardUrls, settings);
 });
 
 document.getElementById('hight-quality-button').addEventListener('click', () => {
-    let checked = document.getElementById('hight-quality-check').checked;
-    const cardDivs = document.querySelectorAll('.card-div img');  // 各カードの<img>要素を取得
-    // 元の高品質画像のURLを使用（data-original-url属性があれば、なければサムネイルを使用）
-    const selectedCardUrls = Array.from(cardDivs).map(img => img.dataset.originalUrl || img.src);
-    let ClearSize = 0.4;
-    if (checked){
-        ClearSize = 1;
-    }
-    ExportDeckContents(selectedCardUrls, ClearSize);
+    const checked = document.getElementById('hight-quality-check').checked;
+    const selectedCardUrls = getSelectedCardUrls();
+    const settings = computeExportSettings(checked);
+    ExportDeckContents(selectedCardUrls, settings);
 });
 
-function ExportDeckContents(selectedCardUrls, ClearSize){
+function ExportDeckContents(selectedCardUrls, settings){
+    if (!selectedCardUrls || selectedCardUrls.length === 0) {
+        return;
+    }
+
     const canvas = document.getElementById('deckCanvas');
     const ctx = canvas.getContext('2d');
+    if (!ctx) return;
 
-    const cardWidth = 741 * ClearSize;  // カードの幅を調整
-    const cardHeight = 1036 * ClearSize;  // カードの高さを調整
-    const gridColumns = 5;  // カラムの数
+    const cardWidth = 741 * settings.clearSize;  // カードの幅を調整
+    const cardHeight = 1036 * settings.clearSize;  // カードの高さを調整
+    const gridColumns = settings.gridColumns;  // カラムの数
     const gridRows = Math.ceil(selectedCardUrls.length / gridColumns);
 
     canvas.width = gridColumns * cardWidth ;
     canvas.height = gridRows * cardHeight;
 
+    // 毎回クリアして描画ズレを防ぎます。
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
     let loadedImages = 0;
     selectedCardUrls.forEach((url, index) => {
         const img = new Image();
+        img.decoding = 'async';
         img.onload = () => {
             const x = (index % gridColumns) * cardWidth;
             const y = Math.floor(index / gridColumns) * cardHeight;
             ctx.drawImage(img, x, y, cardWidth, cardHeight);
             loadedImages++;
             if (loadedImages === selectedCardUrls.length) {
-                exportCanvasAsJPG();
+                lastExportMimeType = settings.mimeType;
+                exportCanvasAsJPG(settings.mimeType, settings.quality);
+            }
+        };
+        img.onerror = () => {
+            loadedImages++;
+            if (loadedImages === selectedCardUrls.length) {
+                lastExportMimeType = settings.mimeType;
+                exportCanvasAsJPG(settings.mimeType, settings.quality);
             }
         };
         img.src = url;
@@ -70,13 +113,13 @@ document.getElementById('saveButton').addEventListener('click', () => {
 function saveAsJPG(jpgUrl) {
     const link = document.createElement('a');
     link.href = jpgUrl;
-    link.download = 'deck.png';
+    link.download = lastExportMimeType === 'image/jpeg' ? 'deck.jpg' : 'deck.png';
     link.click();
 }
 
-function exportCanvasAsJPG() {
+function exportCanvasAsJPG(mimeType = 'image/png', quality = 1) {
     const canvas = document.getElementById('deckCanvas');
-    const jpgUrl = canvas.toDataURL('image/png');
+    const jpgUrl = canvas.toDataURL(mimeType, quality);
 
     // // ポップアップ内容の追加
     const popupContent = document.getElementById('popup-content');
