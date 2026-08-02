@@ -14,11 +14,80 @@ const state = {
   filteredCards: [],
   selectedCardIds: [],
   displayColumns: 3,
-  currentEntries: []
+  currentEntries: [],
+  prefetchedEntries: null,
+  prefetchedKey: ''
 };
 
 function getDefaultDisplayColumns() {
   return window.matchMedia('(max-width: 768px)').matches ? 3 : 5;
+}
+
+function buildDeckPrefetchKey(filteredCards, selectedCardIds) {
+  const filteredKey = filteredCards.map(card => card.id).join(',');
+  const selectedKey = selectedCardIds.join(',');
+  return `${filteredKey}|${selectedKey}`;
+}
+
+function mapImageEntriesToRenderEntries(imageEntries) {
+  return imageEntries.map(item => {
+    const card = state.allCards.find(card => parseInt(card.id, 10) === item.id);
+    const originalUrl = `src/data/img/card_list/${item.id}.png`;
+    return {
+      url: item.url,
+      originalUrl,
+      card
+    };
+  });
+}
+
+function preloadDeckImages(entries) {
+  entries.forEach(entry => {
+    const img = new Image();
+    img.decoding = 'async';
+    img.onload = () => {};
+    img.onerror = () => {
+      if (!entry.originalUrl) return;
+      const fallback = new Image();
+      fallback.decoding = 'async';
+      fallback.src = entry.originalUrl;
+    };
+    img.src = entry.url;
+  });
+}
+
+let prefetchTimer = null;
+let prefetchRequestId = 0;
+
+async function prefetchNextDeck() {
+  const requestId = ++prefetchRequestId;
+  const filteredSnapshot = [...state.filteredCards];
+  const selectedSnapshot = getSelectedCardIds();
+  const prefetchKey = buildDeckPrefetchKey(filteredSnapshot, selectedSnapshot);
+
+  try {
+    const imageEntries = await getRandomImages(filteredSnapshot, selectedSnapshot, deckSize);
+    if (requestId !== prefetchRequestId) return;
+
+    const entries = mapImageEntriesToRenderEntries(imageEntries);
+    state.prefetchedEntries = entries;
+    state.prefetchedKey = prefetchKey;
+
+    preloadDeckImages(entries);
+  } catch (_) {
+    if (requestId !== prefetchRequestId) return;
+    state.prefetchedEntries = null;
+    state.prefetchedKey = '';
+  }
+}
+
+function scheduleDeckPrefetch(delay = 80) {
+  if (prefetchTimer) {
+    clearTimeout(prefetchTimer);
+  }
+  prefetchTimer = window.setTimeout(() => {
+    prefetchNextDeck();
+  }, delay);
 }
 
 // アプリ起動処理
@@ -38,6 +107,7 @@ async function initApp() {
   populateCardSelect(cards);
   renderSelectedCards([]);
   setupEventListeners();
+  scheduleDeckPrefetch(0);
   await renderImages();
 }
 
@@ -85,6 +155,7 @@ function addSelectedCard(cardId) {
   state.selectedCardIds.push(cardId);
   syncSelectedCardInput();
   renderSelectedCards(getSelectedCardsForDisplay(), removeSelectedCard);
+  scheduleDeckPrefetch();
 }
 
 // 事前選択カードを削除します。
@@ -95,6 +166,7 @@ function removeSelectedCard(cardId) {
   state.selectedCardIds.splice(targetIndex, 1);
   syncSelectedCardInput();
   renderSelectedCards(getSelectedCardsForDisplay(), removeSelectedCard);
+  scheduleDeckPrefetch();
 }
 
 // 事前選択カードをすべて削除します。
@@ -102,6 +174,7 @@ function clearAllSelectedCards() {
   state.selectedCardIds = [];
   syncSelectedCardInput();
   renderSelectedCards([], removeSelectedCard);
+  scheduleDeckPrefetch();
 }
 
 function setupEventListeners() {
@@ -131,6 +204,7 @@ function setupEventListeners() {
       state.filteredCards = filterCardsBySearch(state.allCards, event.target.value);
       window.filteredCards = state.filteredCards;
       populateCardSelect(state.filteredCards);
+      scheduleDeckPrefetch();
     });
   }
 
@@ -176,6 +250,7 @@ function setupEventListeners() {
       state.filteredCards = filterCardsByReleasePeriod(state.allCards);
       window.filteredCards = state.filteredCards;
       populateCardSelect(state.filteredCards);
+      scheduleDeckPrefetch();
     });
   }
 }
@@ -184,21 +259,21 @@ function setupEventListeners() {
 async function renderImages() {
   clearContainer('image-container');
   state.selectedCardIds = getSelectedCardIds();
+  const currentKey = buildDeckPrefetchKey(state.filteredCards, state.selectedCardIds);
+  let entries = null;
 
-  const imageEntries = await getRandomImages(state.filteredCards, state.selectedCardIds, deckSize);
-  const entries = imageEntries.map(item => {
-    const card = state.allCards.find(card => parseInt(card.id, 10) === item.id);
-    // 元の高品質画像のパス（表示側で必要に応じてフォールバック）。
-    const originalUrl = `src/data/img/card_list/${item.id}.png`;
-    return {
-      url: item.url,
-      originalUrl: originalUrl,
-      card: card
-    };
-  });
+  if (state.prefetchedEntries && state.prefetchedKey === currentKey) {
+    entries = state.prefetchedEntries;
+  } else {
+    const imageEntries = await getRandomImages(state.filteredCards, state.selectedCardIds, deckSize);
+    entries = mapImageEntriesToRenderEntries(imageEntries);
+  }
 
   state.currentEntries = entries;
+  state.prefetchedEntries = null;
+  state.prefetchedKey = '';
   renderCardImages(state.currentEntries, state.displayColumns);
+  scheduleDeckPrefetch(30);
 }
 
 export { initApp, state, setupEventListeners, renderImages };

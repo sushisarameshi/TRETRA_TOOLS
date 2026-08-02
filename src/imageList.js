@@ -1,5 +1,45 @@
 // imageList.js
 
+const thumbnailManifestCache = new Map();
+
+function isMobileView() {
+  return window.matchMedia('(max-width: 768px)').matches;
+}
+
+function getThumbnailConfig() {
+  if (isMobileView()) {
+    return {
+      basePath: 'src/data/img/thumbnails_mobile/',
+      ext: 'webp'
+    };
+  }
+
+  return {
+    basePath: 'src/data/img/thumbnails/',
+    ext: 'png'
+  };
+}
+
+async function loadValidIdSet(basePath) {
+  if (thumbnailManifestCache.has(basePath)) {
+    return thumbnailManifestCache.get(basePath);
+  }
+
+  let validIdSet = null;
+  try {
+    const res = await fetch(`${basePath}manifest.json`);
+    if (res.ok) {
+      const ids = await res.json();
+      validIdSet = new Set(ids);
+    }
+  } catch (_) {
+    // manifest.json が取得できない場合はフィルタなしで続行します
+  }
+
+  thumbnailManifestCache.set(basePath, validIdSet);
+  return validIdSet;
+}
+
 export async function getRandomImageUrls(count, maxDuplicates = 2, preselected = [], filteredCardIds = []) {
   const basePath = 'src/data/img/card_list/'; // 画像が保存されているパス
   const totalImages = filteredCardIds.length; // 画像の総数を計算
@@ -79,20 +119,11 @@ export async function getRandomImageUrls(count, maxDuplicates = 2, preselected =
 }
 
 export async function getRandomThumbnailUrls(count, maxDuplicates = 2, preselected = [], filteredCardIds = []) {
-  const basePath = 'src/data/img/thumbnails/'; // サムネイル画像のパス
+  const { basePath, ext } = getThumbnailConfig();
 
   // manifest.json を取得し、実際に画像が存在するIDだけに絞り込みます。
   // 画像のないカード（新規追加カード等）がランダム抽出に入らないようにします。
-  let validIdSet = null;
-  try {
-    const res = await fetch(`${basePath}manifest.json`);
-    if (res.ok) {
-      const ids = await res.json();
-      validIdSet = new Set(ids);
-    }
-  } catch (_) {
-    // manifest.json が取得できない場合はフィルタなしで続行します
-  }
+  const validIdSet = await loadValidIdSet(basePath);
 
   // 画像が存在するカードIDのみに絞り込みます
   const availableCardIds = validIdSet
@@ -117,7 +148,7 @@ export async function getRandomThumbnailUrls(count, maxDuplicates = 2, preselect
       continue;
     }
     // 事前選択は常にカードIDのURLを優先し、表示側でサムネイル欠損時フォールバックします。
-    const imageUrl = `${basePath}${cardId}.png`;
+    const imageUrl = `${basePath}${cardId}.${ext}`;
     if (!imageCounts[imageUrl]) {
       imageCounts[imageUrl] = 0;
     }
@@ -131,7 +162,7 @@ export async function getRandomThumbnailUrls(count, maxDuplicates = 2, preselect
   // ランダム選択（サムネイルは PNG のみ）
   while (randomImageUrls.length < count) {
     const randomIndex = Math.floor(Math.random() * availableCardIds.length);
-    const imageUrl = `${basePath}${availableCardIds[randomIndex]}.png`;
+    const imageUrl = `${basePath}${availableCardIds[randomIndex]}.${ext}`;
 
     if (!imageCounts[imageUrl]) {
       imageCounts[imageUrl] = 0;
@@ -143,4 +174,32 @@ export async function getRandomThumbnailUrls(count, maxDuplicates = 2, preselect
     }
   }
   return randomImageUrls;
+}
+
+// 初期表示前にサムネイルを先読みして、デッキ作成時の体感待ち時間を減らします。
+export async function preloadThumbnails(cardIds = []) {
+  const { basePath, ext } = getThumbnailConfig();
+  const validIdSet = await loadValidIdSet(basePath);
+
+  const uniqueIds = [...new Set(
+    cardIds
+      .map(id => parseInt(id, 10))
+      .filter(id => !Number.isNaN(id))
+  )];
+
+  const targetIds = validIdSet
+    ? uniqueIds.filter(id => validIdSet.has(id))
+    : uniqueIds;
+
+  // 一度に大量リクエストを出しすぎないよう、先読み件数を制限します。
+  const maxPreload = 120;
+  const preloadIds = targetIds.slice(0, maxPreload);
+
+  await Promise.all(preloadIds.map(id => new Promise(resolve => {
+    const img = new Image();
+    img.decoding = 'async';
+    img.onload = () => resolve();
+    img.onerror = () => resolve();
+    img.src = `${basePath}${id}.${ext}`;
+  })));
 }
