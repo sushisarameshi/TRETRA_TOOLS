@@ -111,6 +111,7 @@ footer a:visited{
     width: min(1600px, 100%);
     margin: 0 auto; /* コンテナを中央に配置 */
     box-sizing: border-box;
+    perspective: 1000px;
 }
 header,main {
     text-align: center;
@@ -158,6 +159,9 @@ header,main {
 
 .card-div img {
     margin-top: auto;
+    backface-visibility: hidden;
+    transform: translateZ(0);
+    will-change: transform, opacity;
 }
 
 /* 列数が多いときはタイトルを小さくして見切れを抑えます。 */
@@ -335,9 +339,13 @@ header,main {
     opacity: 0.95;
 }
 
+.card-image-flipping {
+    animation: card-flip-reveal 0.32s ease;
+}
+
 .card-image-loaded {
-    animation: card-flip-reveal 0.35s ease;
-    transform: rotateY(360deg);
+    transform: rotateY(0deg);
+    opacity: 1;
 }
 
 .card-preview-modal {
@@ -392,11 +400,19 @@ header,main {
 @keyframes card-flip-reveal {
     from {
         transform: rotateY(0deg);
-        opacity: 0.6;
+        opacity: 0.92;
     }
     to {
         transform: rotateY(360deg);
         opacity: 1;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .card-image-flipping,
+    .card-image-loaded {
+        animation: none;
+        transform: none;
     }
 }
 

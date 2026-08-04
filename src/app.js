@@ -16,7 +16,9 @@ const state = {
   displayColumns: 3,
   currentEntries: [],
   prefetchedEntries: null,
-  prefetchedKey: ''
+  prefetchedKey: '',
+  renderInProgress: false,
+  renderPending: false
 };
 
 function getDefaultDisplayColumns() {
@@ -257,23 +259,46 @@ function setupEventListeners() {
 
 // 画像表示処理の入口。
 async function renderImages() {
+  if (state.renderInProgress) {
+    state.renderPending = true;
+    return;
+  }
+
+  state.renderInProgress = true;
+  const changeButton = document.getElementById('change-images-button');
+  if (changeButton) {
+    changeButton.disabled = true;
+  }
+
   clearContainer('image-container');
   state.selectedCardIds = getSelectedCardIds();
   const currentKey = buildDeckPrefetchKey(state.filteredCards, state.selectedCardIds);
   let entries = null;
 
-  if (state.prefetchedEntries && state.prefetchedKey === currentKey) {
-    entries = state.prefetchedEntries;
-  } else {
-    const imageEntries = await getRandomImages(state.filteredCards, state.selectedCardIds, deckSize);
-    entries = mapImageEntriesToRenderEntries(imageEntries);
-  }
+  try {
+    if (state.prefetchedEntries && state.prefetchedKey === currentKey) {
+      entries = state.prefetchedEntries;
+    } else {
+      const imageEntries = await getRandomImages(state.filteredCards, state.selectedCardIds, deckSize);
+      entries = mapImageEntriesToRenderEntries(imageEntries);
+    }
 
-  state.currentEntries = entries;
-  state.prefetchedEntries = null;
-  state.prefetchedKey = '';
-  renderCardImages(state.currentEntries, state.displayColumns);
-  scheduleDeckPrefetch(30);
+    state.currentEntries = entries;
+    state.prefetchedEntries = null;
+    state.prefetchedKey = '';
+    renderCardImages(state.currentEntries, state.displayColumns);
+    scheduleDeckPrefetch(30);
+  } finally {
+    state.renderInProgress = false;
+    if (changeButton) {
+      changeButton.disabled = false;
+    }
+
+    if (state.renderPending) {
+      state.renderPending = false;
+      renderImages();
+    }
+  }
 }
 
 export { initApp, state, setupEventListeners, renderImages };

@@ -2,6 +2,8 @@
 // このモジュールはDOMの描画に専念します。
 // アプリの状態を受け取り、カード一覧・選択済みカード・発売時期UIを描画します。
 
+let activeRenderId = 0;
+
 function clearContainer(containerId) {
     const container = document.getElementById(containerId);
     if (container) {
@@ -149,12 +151,35 @@ function renderCardImages(imageEntries, displayColumns = 3) {
         return;
     }
 
+    const renderId = ++activeRenderId;
+    const isStaleRender = () => renderId !== activeRenderId;
+
     container.innerHTML = '';
     updateImageContainerColumns(displayColumns);
 
     // 上部に表示されるカードを優先表示し、体感速度を改善します。
     const priorityCount = 6;
     const deferredChunkSize = 4;
+    const flipDurationMs = 320;
+
+    function runFlipReveal(img, frontUrl, isStaleRender) {
+        if (isStaleRender()) return;
+
+        img.classList.remove('card-image-loading', 'card-image-loaded');
+        img.classList.add('card-image-flipping');
+
+        // 半回転時点で表面画像へ差し替えて、裏→表のめくれ感を出します。
+        window.setTimeout(() => {
+            if (isStaleRender()) return;
+            img.src = frontUrl;
+        }, Math.floor(flipDurationMs / 2));
+
+        window.setTimeout(() => {
+            if (isStaleRender()) return;
+            img.classList.remove('card-image-flipping');
+            img.classList.add('card-image-loaded');
+        }, flipDurationMs);
+    }
 
     function createCardNode(entry, index) {
         const div = document.createElement('div');
@@ -186,19 +211,19 @@ function renderCardImages(imageEntries, displayColumns = 3) {
         const loadedImage = new Image();
         loadedImage.decoding = 'async';
         loadedImage.onload = () => {
-            img.src = entry.url;
-            img.classList.remove('card-image-loading');
-            img.classList.add('card-image-loaded');
+            if (isStaleRender()) return;
+            runFlipReveal(img, entry.url, isStaleRender);
         };
         loadedImage.onerror = () => {
+            if (isStaleRender()) return;
             const fallbackImage = new Image();
             fallbackImage.decoding = 'async';
             fallbackImage.onload = () => {
-                img.src = entry.originalUrl;
-                img.classList.remove('card-image-loading');
-                img.classList.add('card-image-loaded');
+                if (isStaleRender()) return;
+                runFlipReveal(img, entry.originalUrl, isStaleRender);
             };
             fallbackImage.onerror = () => {
+                if (isStaleRender()) return;
                 img.src = 'src/data/img/thumbnails/0.png';
                 img.classList.remove('card-image-loading');
                 img.classList.add('card-image-loaded');
@@ -220,6 +245,7 @@ function renderCardImages(imageEntries, displayColumns = 3) {
     const deferredEntries = imageEntries.slice(priorityCount);
 
     priorityEntries.forEach((entry, index) => {
+        if (isStaleRender()) return;
         container.appendChild(createCardNode(entry, index));
     });
 
@@ -229,8 +255,10 @@ function renderCardImages(imageEntries, displayColumns = 3) {
 
     let cursor = 0;
     const appendDeferred = () => {
+        if (isStaleRender()) return;
         const end = Math.min(cursor + deferredChunkSize, deferredEntries.length);
         for (let i = cursor; i < end; i++) {
+            if (isStaleRender()) return;
             container.appendChild(createCardNode(deferredEntries[i], priorityCount + i));
         }
         cursor = end;
