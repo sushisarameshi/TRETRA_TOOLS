@@ -165,20 +165,31 @@ function renderCardImages(imageEntries, displayColumns = 3) {
     function runFlipReveal(img, frontUrl, isStaleRender) {
         if (isStaleRender()) return;
 
-        img.classList.remove('card-image-loading', 'card-image-loaded');
-        img.classList.add('card-image-flipping');
-
-        // 半回転時点で表面画像へ差し替えて、裏→表のめくれ感を出します。
-        window.setTimeout(() => {
+        const startFlip = () => {
             if (isStaleRender()) return;
-            img.src = frontUrl;
-        }, Math.floor(flipDurationMs / 2));
 
-        window.setTimeout(() => {
-            if (isStaleRender()) return;
-            img.classList.remove('card-image-flipping');
-            img.classList.add('card-image-loaded');
-        }, flipDurationMs);
+            img.classList.remove('card-image-loading', 'card-image-loaded', 'card-image-flipping');
+            // 同じクラス再適用でもアニメーションを確実に再始動させます。
+            void img.offsetWidth;
+            img.classList.add('card-image-flipping');
+
+            // 半回転時点で表面画像へ差し替えて、裏→表のめくれ感を出します。
+            window.setTimeout(() => {
+                if (isStaleRender()) return;
+                img.src = frontUrl;
+            }, Math.floor(flipDurationMs / 2));
+
+            window.setTimeout(() => {
+                if (isStaleRender()) return;
+                img.classList.remove('card-image-flipping');
+                img.classList.add('card-image-loaded');
+            }, flipDurationMs);
+        };
+
+        // 連続描画時でもDOM反映後に確実にアニメを始めます。
+        window.requestAnimationFrame(() => {
+            window.requestAnimationFrame(startFlip);
+        });
     }
 
     function createCardNode(entry, index) {
@@ -230,7 +241,11 @@ function renderCardImages(imageEntries, displayColumns = 3) {
             };
             fallbackImage.src = entry.originalUrl || '';
         };
-        loadedImage.src = entry.url;
+        // ノード追加後のフレームで読み込み開始し、連打時のアニメ欠落を防ぎます。
+        window.requestAnimationFrame(() => {
+            if (isStaleRender()) return;
+            loadedImage.src = entry.url;
+        });
 
         img.addEventListener('click', () => {
             openCardPreview(entry);

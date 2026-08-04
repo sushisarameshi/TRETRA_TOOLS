@@ -264,6 +264,9 @@ async function renderImages() {
     return;
   }
 
+  // 進行中の先読み結果が後から上書きしないよう、描画開始時に無効化します。
+  prefetchRequestId++;
+
   state.renderInProgress = true;
   const changeButton = document.getElementById('change-images-button');
   if (changeButton) {
